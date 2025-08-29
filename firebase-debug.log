@@ -1,0 +1,80 @@
+[debug] [2025-08-29T18:01:50.837Z] ----------------------------------------------------------------------
+[debug] [2025-08-29T18:01:50.839Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/mb7dm7av34020nn56xbny0fl17nwiddp-firebase-tools-14.14.0/lib/node_modules/firebase-tools/lib/bin/firebase.js deploy --only hosting
+[debug] [2025-08-29T18:01:50.840Z] CLI Version:   14.14.0
+[debug] [2025-08-29T18:01:50.840Z] Platform:      linux
+[debug] [2025-08-29T18:01:50.840Z] Node Version:  v20.19.1
+[debug] [2025-08-29T18:01:50.841Z] Time:          Fri Aug 29 2025 18:01:50 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-08-29T18:01:50.841Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-29T18:01:51.560Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:51.560Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:51.565Z] >>> [apiv2][query] GET https://monospace-pa.googleapis.com/v1/workspaces/logisticsvisionbeta-41546928 [none]
+[debug] [2025-08-29T18:01:53.016Z] <<< [apiv2][status] GET https://monospace-pa.googleapis.com/v1/workspaces/logisticsvisionbeta-41546928 200
+[debug] [2025-08-29T18:01:53.017Z] <<< [apiv2][body] GET https://monospace-pa.googleapis.com/v1/workspaces/logisticsvisionbeta-41546928 {"workspaceId":"logisticsvisionbeta-41546928","name":"LogisticsVisionBeta","workspaceRedirectUrl":"firebase-logisticsvisionbeta-1756230382990.cluster-ikslh4rdsnbqsvu5nw3v4dqjj2.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-08-29T17:59:30.618205Z","workspaceTemplate":"WORKSPACE_TEMPLATE_BLANK_WEB","owner":"SELF","serviceAccountEmail":"msp-4301219285170891644@monospace-per-ws-sa-10.iam.gserviceaccount.com","enableNix":true,"ownerEmail":"infinityinves@gmail.com","workspaceImageUrl":"https://www.gstatic.com/monospace/250314/workspace-blank-192.png","templateArgs":"{}","templateRepoUrl":"file:///usr/local/monospace/templates/public/blank-nix","workstationAccessToken":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vd29ya3N0YXRpb25zIiwiYXVkIjoiZmlyZWJhc2UtbG9naXN0aWNzdmlzaW9uYmV0YS0xNzU2MjMwMzgyOTkwLmNsdXN0ZXItaWtzbGg0cmRzbmJxc3Z1NW53M3Y0ZHFqajIuY2xvdWR3b3Jrc3RhdGlvbnMuZGV2IiwiaWF0IjoxNzU2NDkwNTEyLCJleHAiOjE3NTY1NzY5MTJ9.ijcLvq0OZWwHlIdOIhK7E4U-jm4VLGQe08fqAVoNPqVZMF00KWfGRs6za1-YWP40AAyLFrQguzZ1MI5VEJwxipsHmt08lA_r2bfrA5pa5jzW5e_bQ3xvVWWxrmP53j25JIUFE4MRC4usYW8G_l8Y4egLSeXr5vjU8T8qTp4OTNNuYO0weI4BMl5BohIM6mdOO1ktQAfpepokTbIBPFqXbQyi8zQZhBOmhvoulDoTgaM4r1QNO-3_xISSQ8BiRxKadDCN4y1K4bt75wqvcqsKi4EcMa0jitE41oNQ7PT8YUIullqeH12dCJ9ts9dWkCtLFg7UC8NzLnuzQPtH88_CAg"}
+[info] Updating Studio Workspace active project to match Firebase CLI 'logistics-vision-c82ts'
+[debug] [2025-08-29T18:01:53.018Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:53.019Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:53.020Z] >>> [apiv2][query] PATCH https://monospace-pa.googleapis.com/v1/workspaces/logisticsvisionbeta-41546928 updateMask=workspace.firebaseProjectId
+[debug] [2025-08-29T18:01:53.020Z] >>> [apiv2][body] PATCH https://monospace-pa.googleapis.com/v1/workspaces/logisticsvisionbeta-41546928 {"firebaseProjectId":"logistics-vision-c82ts"}
+[debug] [2025-08-29T18:01:53.627Z] <<< [apiv2][status] PATCH https://monospace-pa.googleapis.com/v1/workspaces/logisticsvisionbeta-41546928 200
+[debug] [2025-08-29T18:01:53.627Z] <<< [apiv2][body] PATCH https://monospace-pa.googleapis.com/v1/workspaces/logisticsvisionbeta-41546928 {"workspaceId":"logisticsvisionbeta-41546928","name":"LogisticsVisionBeta","workspaceRedirectUrl":"firebase-logisticsvisionbeta-1756230382990.cluster-ikslh4rdsnbqsvu5nw3v4dqjj2.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-08-29T17:59:30.618205Z","workspaceTemplate":"WORKSPACE_TEMPLATE_BLANK_WEB","serviceAccountEmail":"msp-4301219285170891644@monospace-per-ws-sa-10.iam.gserviceaccount.com","enableNix":true,"workspaceImageUrl":"https://www.gstatic.com/monospace/250314/workspace-blank-192.png","templateArgs":"{}","templateRepoUrl":"file:///usr/local/monospace/templates/public/blank-nix","firebaseProjectId":"logistics-vision-c82ts"}
+[debug] [2025-08-29T18:01:53.637Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-08-29T18:01:53.638Z] > authorizing via signed-in user (infinityinves@gmail.com)
+[debug] [2025-08-29T18:01:53.638Z] [iam] checking project logistics-vision-c82ts for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-08-29T18:01:53.639Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:53.639Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:53.639Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/logistics-vision-c82ts:testIamPermissions [none]
+[debug] [2025-08-29T18:01:53.639Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/logistics-vision-c82ts:testIamPermissions x-goog-quota-user=projects/logistics-vision-c82ts
+[debug] [2025-08-29T18:01:53.639Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/logistics-vision-c82ts:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-29T18:01:54.251Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/logistics-vision-c82ts:testIamPermissions 200
+[debug] [2025-08-29T18:01:54.251Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/logistics-vision-c82ts:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-29T18:01:54.253Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:54.253Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:54.254Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/logistics-vision-c82ts [none]
+[debug] [2025-08-29T18:01:54.459Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/logistics-vision-c82ts 200
+[debug] [2025-08-29T18:01:54.459Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/logistics-vision-c82ts {"projectId":"logistics-vision-c82ts","projectNumber":"1026842497415","displayName":"Logistics Vision","name":"projects/logistics-vision-c82ts","resources":{"hostingSite":"logistics-vision-c82ts"},"state":"ACTIVE","etag":"1_524ea32c-1dac-40d8-8a70-4e1c6802a40e"}
+[debug] [2025-08-29T18:01:57.945Z] defaultcredentials: writing to file /home/user/.config/firebase/infinityinves_gmail_com_application_default_credentials.json
+[debug] [2025-08-29T18:01:57.949Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:57.949Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:57.950Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/logistics-vision-c82ts/sites pageToken=&pageSize=10
+[debug] [2025-08-29T18:01:58.822Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/logistics-vision-c82ts/sites 200
+[debug] [2025-08-29T18:01:58.823Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/logistics-vision-c82ts/sites {"sites":[{"name":"projects/logistics-vision-c82ts/sites/logistics-vision-c82ts","defaultUrl":"https://logistics-vision-c82ts.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2025-08-29T18:01:58.824Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:58.824Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:58.825Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/logistics-vision-c82ts/sites 
+[debug] [2025-08-29T18:01:59.055Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/logistics-vision-c82ts/sites 200
+[debug] [2025-08-29T18:01:59.055Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/logistics-vision-c82ts/sites {"sites":[{"name":"projects/logistics-vision-c82ts/sites/logistics-vision-c82ts","defaultUrl":"https://logistics-vision-c82ts.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2025-08-29T18:01:59.056Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:59.056Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:01:59.056Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/logistics-vision-c82ts/webApps/-/config [none]
+[debug] [2025-08-29T18:01:59.682Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/logistics-vision-c82ts/webApps/-/config 200
+[debug] [2025-08-29T18:01:59.682Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/logistics-vision-c82ts/webApps/-/config {"projectId":"logistics-vision-c82ts","appId":"1:1026842497415:web:614bd0d6ce93cccfcf4322","storageBucket":"logistics-vision-c82ts.firebasestorage.app","apiKey":"AIzaSyCae2VYKvN-UY2ugWm4B-KQ7OJ1V11qWew","authDomain":"logistics-vision-c82ts.firebaseapp.com","messagingSenderId":"1026842497415"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2025-08-29T18:02:09.026Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:02:09.026Z] Checked if tokens are valid: true, expires at: 1756493583608
+[debug] [2025-08-29T18:02:09.027Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/logistics-vision-c82ts/sites/logistics-vision-c82ts [none]
+[debug] [2025-08-29T18:02:09.847Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/logistics-vision-c82ts/sites/logistics-vision-c82ts 200
+[debug] [2025-08-29T18:02:09.847Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/logistics-vision-c82ts/sites/logistics-vision-c82ts {"name":"projects/logistics-vision-c82ts/sites/logistics-vision-c82ts","defaultUrl":"https://logistics-vision-c82ts.web.app","type":"DEFAULT_SITE"}
+[info] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+[info]    ▲ Next.js 15.5.0
+
+[info]    - Environments: .env
+
+
+[info]    Creating an optimized production build ...
+
