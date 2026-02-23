@@ -1,9 +1,8 @@
 // src/lib/firebase-admin.ts
-import { initializeApp, getApps, App, cert } from "firebase-admin/app";
+import { initializeApp, getApps, App, cert, applicationDefault } from "firebase-admin/app";
 import { getAuth, Auth } from "firebase-admin/auth";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 import { getStorage,  } from "firebase-admin/storage";
-import serviceAccount from "../../config/serviceAccountKey.json"; // Adjust path
 import "dotenv/config";
 
 let adminApp: App | undefined;
@@ -21,8 +20,8 @@ function initializeFirebaseAdmin() {
     } else {
       // Initialize new app
       adminApp = initializeApp({
-        credential: cert(serviceAccount as any),
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || undefined, // optional
+        credential: applicationDefault(),
+        storageBucket: process.env.STORAGE_BUCKET || undefined, // optional
       });
       console.log("✅ Firebase Admin SDK initialized using service account.");
     }
@@ -33,11 +32,11 @@ function initializeFirebaseAdmin() {
 
       console.log("✅ Firestore connected successfully.");
 
-      if (process.env.FIREBASE_STORAGE_BUCKET) {
-        storage = getStorage(adminApp).bucket(process.env.FIREBASE_STORAGE_BUCKET);
-        console.log(`✅ Storage connected: ${process.env.FIREBASE_STORAGE_BUCKET}`);
+      if (process.env.STORAGE_BUCKET) {
+        storage = getStorage(adminApp).bucket(process.env.STORAGE_BUCKET);
+        console.log(`✅ Storage connected: ${process.env.STORAGE_BUCKET}`);
       } else {
-        console.warn("⚠ FIREBASE_STORAGE_BUCKET not set. Storage unavailable.");
+        console.warn("⚠ STORAGE_BUCKET not set. Storage unavailable.");
       }
     } else {
       auth = undefined;
