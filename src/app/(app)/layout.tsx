@@ -3,29 +3,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Bell,
-  Briefcase,
-  FileArchive,
-  FilePlus,
-  FileText,
-  LayoutDashboard,
-  PenSquare,
-  Plus,
-  Receipt,
-  Search,
-  Shield,
-  Truck,
-  UserCheck,
-  Users,
-  Wrench,
-  DollarSign,
-  ClipboardList,
-  Compass,
-  User as UserIcon,
-  Search as SearchIcon,
-  Route,
-} from 'lucide-react';
+import { Bell, Briefcase, FileArchive, FilePlus, FileText, LayoutDashboard, PenSquare, Plus, Receipt, Search, Shield, Truck, UserCheck, Users, Wrench, DollarSign, ClipboardList, Compass, User as UserIcon, Search as SearchIcon, Route, BarChart3, StickyNote } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -417,6 +395,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith('/analytics')} tooltip="Analytics">
+                  <Link href="/analytics">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Analytics
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith('/notes')} tooltip="Notes">
+                  <Link href="/notes">
+                    <StickyNote className="mr-2 h-4 w-4" />
+                    Notes
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             <SidebarMenuItem>
               <CollapsibleSidebarItem
                 icon={<Shield />}

@@ -65,7 +65,7 @@ export default async function DashboardPage() {
 
   const totalCustomers = customers.length;
 
-  const recentTrips = trips.slice(0, 5);
+  const recentTrips = trips.slice(0, 10);
   
   // --- Daily Movement Matrix Calculations ---
   const today = new Date();

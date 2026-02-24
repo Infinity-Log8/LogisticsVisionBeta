@@ -75,7 +75,7 @@ export default function PnLPage() {
         // Calculated expenses from trips
         const relevantTrips = trips.filter(trip => trip.status === 'Delivered');
 
-        const tireCosts = relevantTrips.reduce((sum, trip) => sum + trip.distance * 0.30, 0);
+        const tireCosts = relevantTrips.reduce((sum, trip) => sum + (trip.tireCost ?? trip.distance * 0.3) + (trip.fuelCost ?? trip.distance * 2.7 * 19) + (trip.driverOTCost ?? trip.distance * 0.40)0, 0);
         const messCosts = relevantTrips.reduce((sum, trip) => sum + (trip.distance / 100) * 66.6, 0);
 
         if (tireCosts > 0) {

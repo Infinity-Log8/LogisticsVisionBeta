@@ -28,6 +28,12 @@ export default function AdminSettingsPage() {
   const [currency, setCurrency] = useState('usd');
   const [taxId, setTaxId] = useState('');
   const [defaultPaymentTerms, setDefaultPaymentTerms] = useState(30);
+  const [loadRatePerKm, setLoadRatePerKm] = useState(23.76);
+  const [fuelPricePerLitre, setFuelPricePerLitre] = useState(19.00);
+  const [driverOTRateLow, setDriverOTRateLow] = useState(0.40);
+  const [driverOTRateHigh, setDriverOTRateHigh] = useState(0.50);
+  const [fuelEfficiencyLPer100Km, setFuelEfficiencyLPer100Km] = useState(2.7);
+  const [brokerCommissionRate, setBrokerCommissionRate] = useState(0.05);
   const [invoiceFooter, setInvoiceFooter] = useState('');
   const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
 
@@ -40,6 +46,12 @@ export default function AdminSettingsPage() {
       setCurrency(settings.currency || 'usd');
       setTaxId(settings.taxId || '');
       setDefaultPaymentTerms(settings.defaultPaymentTerms || 30);
+    setLoadRatePerKm(settings.loadRatePerKm ?? 23.76);
+    setFuelPricePerLitre(settings.fuelPricePerLitre ?? 19.00);
+    setDriverOTRateLow(settings.driverOTRateLow ?? 0.40);
+    setDriverOTRateHigh(settings.driverOTRateHigh ?? 0.50);
+    setFuelEfficiencyLPer100Km(settings.fuelEfficiencyLPer100Km ?? 2.7);
+    setBrokerCommissionRate(settings.brokerCommissionRate ?? 0.05);
       setInvoiceFooter(settings.invoiceFooter || '');
       setTaxRates(settings.taxRates || []);
       setInitialLoading(false);

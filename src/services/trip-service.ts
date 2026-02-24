@@ -1,7 +1,7 @@
+import { db } from '@/lib/firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
-'use server';
-
-import { ensureDbConnected } from '@/lib/firebase-admin';
+export type TripType = 'round-trip' | 'one-way';
 
 export type Trip = {
   id: string;
@@ -11,79 +11,58 @@ export type Trip = {
   destination: string;
   driver: string;
   driverId: string;
+  date: string;
   status: 'Planned' | 'In Transit' | 'Delivered' | 'Cancelled' | 'Pending';
   pickupTime: string;
   estimatedDelivery: string;
+  data?: string;
   vehicleId: string;
   distance: number;
   revenue: number;
-  notes: string;
+  notes?: string;
   truck: string;
+  tripType: TripType;
+  brokerRef?: string;
+  hiredTransportation?: boolean;
+  loadRateCost: number;
+  messDistanceCost: number;
+  tireCost: number;
+  fuelCost: number;
+  driverOTCost: number;
 };
 
-export type TripData = Omit<Trip, 'id'>;
+export type TripFilters = {
+  startDate?: string; endDate?: string;
+  customerId?: string; driverId?: string; status?: string;
+};
 
-export async function createTrip(tripData: TripData): Promise<Trip> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('trips').doc();
-  const newTrip = {
-      id: docRef.id,
-      ...tripData,
-  };
-  await docRef.set(newTrip);
-  return newTrip;
+export async function createTrip(data: Omit<Trip, 'id'>): Promise<Trip> {
+  const ref = await db.collection('trips').add({ ...data, createdAt: Timestamp.now() });
+  return { id: ref.id, ...data };
 }
 
-export async function updateTrip(id: string, tripData: Partial<TripData>): Promise<void> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('trips').doc(id);
-  await docRef.update({ ...tripData });
-}
-
-export async function getTrips(options: { startDate?: string, endDate?: string, customerId?: string } = {}): Promise<Trip[]> {
-  try {
-    const db = ensureDbConnected();
-    let query: FirebaseFirestore.Query = db.collection('trips');
-
-    if (options.startDate) {
-        query = query.where('estimatedDelivery', '>=', options.startDate);
-    }
-    if (options.endDate) {
-        query = query.where('estimatedDelivery', '<=', options.endDate);
-    }
-    if (options.customerId) {
-        query = query.where('customerId', '==', options.customerId);
-    }
-
-    if (options.startDate || options.endDate) {
-      query = query.orderBy('estimatedDelivery', 'desc');
-    } else {
-      query = query.orderBy('pickupTime', 'desc');
-    }
-
-    const tripsSnapshot = await query.get();
-    if (tripsSnapshot.empty) {
-      return [];
-    }
-    return tripsSnapshot.docs.map((doc) => doc.data() as Trip);
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get trips. Returning empty array. Error: ${error.message}`);
-    return [];
-  }
+export async function updateTrip(id: string, data: Partial<Omit<Trip, 'id'>>): Promise<void> {
+  await db.collection('trips').doc(id).update(data);
 }
 
 export async function getTripById(id: string): Promise<Trip | null> {
-  try {
-    const db = ensureDbConnected();
-    const docRef = db.collection('trips').doc(id);
-    const docSnap = await docRef.get();
+  const doc = await db.collection('trips').doc(id).get();
+  if (!doc.exists) return null;
+  return { id: doc.id, ...doc.data() } as Trip;
+}
 
-    if (!docSnap.exists) {
-      return null;
-    }
-    return docSnap.data() as Trip;
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get trip ${id}. Returning null. Error: ${error.message}`);
-    return null;
-  }
+export async function getTrips(filters?: TripFilters): Promise<Trip[]> {
+  let q: FirebaseFirestore.Query = db.collection('trips');
+  if (filters?.customerId) q = q.where('customerId', '==', filters.customerId);
+  if (filters?.driverId) q = q.where('driverId', '==', filters.driverId);
+  if (filters?.status) q = q.where('status', '==', filters.status);
+  if (filters?.startDate) q = q.where('date', '>=', filters.startDate);
+  if (filters?.endDate) q = q.where('date', '<=', filters.endDate);
+  q = q.orderBy('date', 'desc');
+  const snap = await q.get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Trip));
+}
+
+export async function deleteTrip(id: string): Promise<void> {
+  await db.collection('trips').doc(id).delete();
 }

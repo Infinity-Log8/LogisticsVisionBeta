@@ -1,244 +1,144 @@
-'use client';
-
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Combobox } from '@/components/ui/combobox';
-
-import type { Customer } from '@/services/customer-service';
-import type { Employee } from '@/services/employee-service';
-import type { Vehicle } from '@/services/vehicle-service';
-import { createTripAction } from '../actions';
-import { mockLocations } from '@/data/locations';
-
-const tripFormSchema = z.object({
-  customerId: z.string().min(1, 'Customer is required'),
-  driverId: z.string().min(1, 'Driver is required'),
-  vehicleId: z.string().min(1, 'Vehicle is required'),
-  origin: z.string().min(1, 'Origin is required'),
-  destination: z.string().min(1, 'Destination is required'),
-  pickupTime: z.string().min(1, 'Pickup time is required'),
-  estimatedDelivery: z.string().min(1, 'Estimated delivery is required'),
-  status: z.enum(['Planned', 'In Transit', 'Delivered', 'Cancelled', 'Pending']),
-  distance: z.coerce.number().min(0, 'Distance must be non-negative'),
-  revenue: z.coerce.number().min(0, 'Revenue must be non-negative'),
-  notes: z.string().optional()
-});
-
-type TripFormValues = z.infer<typeof tripFormSchema>;
+"use client";
+import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Combobox } from "@/components/ui/combobox";
+import type { Customer } from "@/services/customer-service";
+import type { Employee } from "@/services/employee-service";
+import type { Vehicle } from "@/services/vehicle-service";
+import { createTripAction } from "./actions";
 
 const LOAD_RATE_PER_KM = 23.76;
+const MESS_RATE = 66.6 / 100;
+const TIRE_RATE = 0.30;
+const FUEL_L_PER_KM = 2.7;
+const FUEL_PRICE = 19.00;
+const OT_RATE = 0.40;
 
-type NewTripFormProps = {
-  customers: Customer[];
-  drivers: Employee[];
-  vehicles: Vehicle[];
-};
+const tripSchema = z.object({
+  customerId: z.string().min(1, "Customer required"),
+  driverId: z.string().min(1, "Driver required"),
+  vehicleId: z.string().min(1, "Vehicle required"),
+  origin: z.string().min(1, "Origin required"),
+  destination: z.string().min(1, "Destination required"),
+  pickupTime: z.string().min(1, "Pickup time required"),
+  estimatedDelivery: z.string().min(1, "Delivery time required"),
+  status: z.enum(["Planned","In Transit","Delivered","Cancelled","Pending"]),
+  distance: z.coerce.number().min(0),
+  revenue: z.coerce.number().min(0),
+  tripType: z.enum(["round-trip","one-way"]),
+  brokerRef: z.string().optional(),
+  hiredTransportation: z.boolean().default(false),
+  notes: z.string().optional(),
+});
+type TripFormValues = z.infer<typeof tripSchema>;
 
-export function NewTripForm({ customers, drivers, vehicles }: NewTripFormProps) {
+type Props = { customers: Customer[]; drivers: Employee[]; vehicles: Vehicle[] };
+
+export function NewTripForm({ customers, drivers, vehicles }: Props) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [costs, setCosts] = useState({ load:0, mess:0, tire:0, fuel:0, ot:0, net:0 });
 
   const form = useForm<TripFormValues>({
-    resolver: zodResolver(tripFormSchema),
-    defaultValues: {
-      status: 'Planned',
-      notes: '',
-    },
+    resolver: zodResolver(tripSchema),
+    defaultValues: { status:"Planned", distance:0, revenue:0, tripType:"one-way", hiredTransportation:false, notes:"", brokerRef:"" },
   });
 
-  const distance = form.watch('distance');
+  const distance = form.watch("distance");
+  const revenue = form.watch("revenue");
 
   useEffect(() => {
-    const dist = Number(distance);
-    if (!isNaN(dist) && dist >= 0) {
-      const calculatedRevenue = dist * LOAD_RATE_PER_KM;
-      form.setValue('revenue', parseFloat(calculatedRevenue.toFixed(2)), { shouldValidate: true });
-    }
-  }, [distance, form]);
+    const km = Number(distance) || 0;
+    const load = km * LOAD_RATE_PER_KM;
+    const mess = km * MESS_RATE;
+    const tire = km * TIRE_RATE;
+    const fuel = km * FUEL_L_PER_KM * FUEL_PRICE;
+    const ot   = km * OT_RATE;
+    const net  = load - mess - tire - fuel - ot;
+    setCosts({ load, mess, tire, fuel, ot, net });
+    form.setValue("revenue", parseFloat(load.toFixed(2)), { shouldValidate:true, shouldDirty:true });
+  }, [distance]);
 
-  useEffect(() => {
-    const origin = searchParams.get('origin');
-    const destination = searchParams.get('destination');
-    const distance = searchParams.get('distance');
-
-    if (origin) form.setValue('origin', decodeURIComponent(origin));
-    if (destination) form.setValue('destination', decodeURIComponent(destination));
-    if (distance) form.setValue('distance', parseFloat(distance));
-  }, [searchParams, form]);
-
+  const fmt = (n: number) => `N$ ${n.toFixed(2)}`;
 
   async function onSubmit(data: TripFormValues) {
     setLoading(true);
-
+    const km = Number(data.distance) || 0;
     const customer = customers.find(c => c.id === data.customerId);
-    const driver = drivers.find(d => d.id === data.driverId);
-    const vehicle = vehicles.find(v => v.id === data.vehicleId);
-
-    const tripData = {
+    const driver   = drivers.find(d => d.id === data.driverId);
+    const vehicle  = vehicles.find(v => v.id === data.vehicleId);
+    const result = await createTripAction({
       ...data,
-      customer: customer?.company || 'Unknown Customer',
-      driver: driver?.name || 'Unknown Driver',
-      truck: vehicle?.licensePlate || 'Unknown Vehicle',
-      notes: data.notes ?? "", // fix type issue
-    };
-
-    const result = await createTripAction(tripData);
+      customer: customer?.name || "Unknown",
+      driver:   driver?.name   || "Unknown",
+      truck:    vehicle?.licensePlate || "Unknown",
+      date:     data.pickupTime.split("T")[0],
+      loadRateCost:     parseFloat((km * LOAD_RATE_PER_KM).toFixed(2)),
+      messDistanceCost: parseFloat((km * MESS_RATE).toFixed(2)),
+      tireCost:         parseFloat((km * TIRE_RATE).toFixed(2)),
+      fuelCost:         parseFloat((km * FUEL_L_PER_KM * FUEL_PRICE).toFixed(2)),
+      driverOTCost:     parseFloat((km * OT_RATE).toFixed(2)),
+    });
     setLoading(false);
-
-    if (result.success && result.tripId) {
-      toast({
-        title: 'Trip Created',
-        description: `Trip #${result.tripId} has been created successfully.`,
-      });
-      router.push(`/trips/${result.tripId}`);
+    if (result.success) {
+      toast({ title:"Trip Created", description:"New trip added successfully." });
+      router.push("/trips");
+      router.refresh();
     } else {
-      toast({
-        variant: 'destructive',
-        title: 'Error Creating Trip',
-        description: result.error,
-      });
+      toast({ variant:"destructive", title:"Error", description: result.error });
     }
   }
 
-  const customerOptions = customers.map(c => ({ value: c.id, label: c.company }));
-  const driverOptions = drivers.map(d => ({ value: d.id, label: d.name }));
-  const vehicleOptions = vehicles.map(v => ({ value: v.id, label: `${v.model} (${v.licensePlate})` }));
+  const custOpts = customers.map(c => ({ value:c.id, label:c.name }));
+  const drvOpts  = drivers.map(d => ({ value:d.id, label:d.name }));
+  const vehOpts  = vehicles.map(v => ({ value:v.id, label:`${v.model} (${v.licensePlate})` }));
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Trip Details</CardTitle>
-            <CardDescription>Enter the primary information for the new trip.</CardDescription>
-          </CardHeader>
+          <CardHeader><CardTitle>Trip Details</CardTitle><CardDescription>Fill in the trip information.</CardDescription></CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <FormField
-                control={form.control}
-                name="customerId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Customer</FormLabel>
-                    <Combobox
-                      options={customerOptions}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select a customer..."
-                      searchPlaceholder="Search customers..."
-                      emptyPlaceholder="No customer found."
-                      disabled={loading}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="driverId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Driver</FormLabel>
-                    <Combobox
-                      options={driverOptions}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select a driver..."
-                      searchPlaceholder="Search drivers..."
-                      emptyPlaceholder="No driver found."
-                      disabled={loading}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="vehicleId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Vehicle</FormLabel>
-                    <Combobox
-                      options={vehicleOptions}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select a vehicle..."
-                      searchPlaceholder="Search vehicles..."
-                      emptyPlaceholder="No vehicle found."
-                      disabled={loading}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField control={form.control} name="customerId" render={({ field }) => (
+                <FormItem className="flex flex-col"><FormLabel>Customer</FormLabel>
+                  <Combobox options={custOpts} value={field.value} onChange={field.onChange} placeholder="Select customer..." searchPlaceholder="Search..." emptyPlaceholder="No customer." disabled={loading} />
+                  <FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="driverId" render={({ field }) => (
+                <FormItem className="flex flex-col"><FormLabel>Driver</FormLabel>
+                  <Combobox options={drvOpts} value={field.value} onChange={field.onChange} placeholder="Select driver..." searchPlaceholder="Search..." emptyPlaceholder="No driver." disabled={loading} />
+                  <FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="vehicleId" render={({ field }) => (
+                <FormItem className="flex flex-col"><FormLabel>Vehicle</FormLabel>
+                  <Combobox options={vehOpts} value={field.value} onChange={field.onChange} placeholder="Select vehicle..." searchPlaceholder="Search..." emptyPlaceholder="No vehicle." disabled={loading} />
+                  <FormMessage /></FormItem>
+              )} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="origin"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Origin</FormLabel>
-                    <Combobox
-                      options={mockLocations}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select origin..."
-                      searchPlaceholder="Search locations..."
-                      emptyPlaceholder="No location found."
-                      disabled={loading}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="destination"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Destination</FormLabel>
-                    <Combobox
-                      options={mockLocations}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select destination..."
-                      searchPlaceholder="Search locations..."
-                      emptyPlaceholder="No location found."
-                      disabled={loading}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="origin" render={({ field }) => (
+                <FormItem><FormLabel>Origin</FormLabel><FormControl><Input placeholder="City / Location" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="destination" render={({ field }) => (
+                <FormItem><FormLabel>Destination</FormLabel><FormControl><Input placeholder="City / Location" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
+              )} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField control={form.control} name="pickupTime" render={({ field }) => (
                 <FormItem><FormLabel>Pickup Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
               )} />
@@ -246,28 +146,73 @@ export function NewTripForm({ customers, drivers, vehicles }: NewTripFormProps) 
                 <FormItem><FormLabel>Estimated Delivery</FormLabel><FormControl><Input type="datetime-local" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <FormField control={form.control} name="distance" render={({ field }) => (
                 <FormItem><FormLabel>Distance (km)</FormLabel><FormControl><Input type="number" placeholder="0" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="revenue" render={({ field }) => (
-                <FormItem><FormLabel>Revenue (N$)</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} disabled={loading} readOnly={true} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Revenue (N$)</FormLabel><FormControl><Input type="number" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="tripType" render={({ field }) => (
+                <FormItem><FormLabel>Trip Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loading}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="one-way">One-Way</SelectItem>
+                      <SelectItem value="round-trip">Round-Trip</SelectItem>
+                    </SelectContent>
+                  </Select><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="status" render={({ field }) => (
-                <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value} disabled={loading}><FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Planned">Planned</SelectItem><SelectItem value="In Transit">In Transit</SelectItem><SelectItem value="Delivered">Delivered</SelectItem><SelectItem value="Cancelled">Cancelled</SelectItem><SelectItem value="Pending">Pending</SelectItem></SelectContent></Select><FormMessage /></FormItem>
+                <FormItem><FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loading}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="Planned">Planned</SelectItem>
+                      <SelectItem value="In Transit">In Transit</SelectItem>
+                      <SelectItem value="Delivered">Delivered</SelectItem>
+                      <SelectItem value="Cancelled">Cancelled</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select><FormMessage /></FormItem>
+              )} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="brokerRef" render={({ field }) => (
+                <FormItem><FormLabel>Broker Reference (optional)</FormLabel><FormControl><Input placeholder="Broker name / ID" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="hiredTransportation" render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-2 space-y-0 pt-8">
+                  <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={loading} /></FormControl>
+                  <FormLabel className="font-normal">Hired Transportation</FormLabel>
+                </FormItem>
               )} />
             </div>
             <FormField control={form.control} name="notes" render={({ field }) => (
-              <FormItem><FormLabel>Notes (Optional)</FormLabel><FormControl><Textarea placeholder="Add any important notes or instructions for the trip." {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Notes (optional)</FormLabel><FormControl><Textarea placeholder="Additional notes..." {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
             )} />
           </CardContent>
         </Card>
-        <div className="flex justify-end gap-2 mt-6">
-          <Button type="button" variant="outline" onClick={() => router.push('/trips')} disabled={loading}>Cancel</Button>
-          <Button type="submit" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Trip
-          </Button>
+
+        {(Number(distance) > 0) && (
+          <Card>
+            <CardHeader><CardTitle>Cost Breakdown</CardTitle><CardDescription>Auto-calculated from distance</CardDescription></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                <div className="space-y-1"><p className="text-muted-foreground">Load Rate (N$23.76/km)</p><p className="font-semibold text-green-600">{fmt(costs.load)}</p></div>
+                <div className="space-y-1"><p className="text-muted-foreground">Mess Distance</p><p className="font-semibold text-red-500">-{fmt(costs.mess)}</p></div>
+                <div className="space-y-1"><p className="text-muted-foreground">Tire Wear (N$0.30/km)</p><p className="font-semibold text-red-500">-{fmt(costs.tire)}</p></div>
+                <div className="space-y-1"><p className="text-muted-foreground">Fuel (2.7L × N$19)</p><p className="font-semibold text-red-500">-{fmt(costs.fuel)}</p></div>
+                <div className="space-y-1"><p className="text-muted-foreground">Driver OT (N$0.40/km)</p><p className="font-semibold text-red-500">-{fmt(costs.ot)}</p></div>
+                <div className="space-y-1 border-t pt-2"><p className="text-muted-foreground font-medium">Est. Net Profit</p><p className={`font-bold text-lg ${costs.net >= 0 ? "text-green-600":"text-red-600"}`}>{fmt(costs.net)}</p></div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => router.push("/trips")} disabled={loading}>Cancel</Button>
+          <Button type="submit" disabled={loading}>{loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Create Trip</Button>
         </div>
       </form>
     </Form>
