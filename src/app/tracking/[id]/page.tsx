@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { getTripById } from '@/services/trip-service';
 import { notFound } from 'next/navigation';
@@ -23,7 +24,7 @@ const getStatusInfo = (status: string): { text: string; progress: number } => {
 
 export default async function TrackingPage({ params }: { params: { id: string } }) {
     const { id } = params;
-    const trip = await getTripById(id);
+    const trip = await getTripById(id).catch(() => null);
 
     if (!trip) {
         notFound();

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, PlusCircle, File as FileIcon, Truck as TruckIcon, MoreHorizontal } from 'lucide-react';
@@ -9,7 +10,7 @@ import { getExpenses } from '@/services/expense-service';
 import { DeleteExpenseMenuItem } from './delete-expense-menu-item';
 
 export default async function ExpensesPage() {
-  const expenses = await getExpenses();
+  const expenses = await getExpenses().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   return (
     <div className="flex-1 space-y-8">

@@ -21,11 +21,12 @@ export async function getCommissions(options: { status?: 'Paid' | 'Pending' } = 
     if (options.status) {
         query = query.where('status', '==', options.status);
     }
-    const snapshot = await query.orderBy('payoutDate', 'desc').get();
+    const snapshot = await query.orderBy('payoutDate', 'desc').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
 
     if (snapshot.empty) {
       return [];
     }
+    if (!snapshot) return [];
     return snapshot.docs.map((doc) => doc.data() as Commission);
   } catch (error: any) {
     console.warn(`Could not connect to Firestore to get commissions. Returning empty array. Error: ${error.message}`);

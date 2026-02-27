@@ -18,7 +18,7 @@ function groupByMonth(trips: Awaited<ReturnType<typeof getTrips>>) {
 }
 
 export default async function AnalyticsPage() {
-  const trips = await getTrips();
+  const trips = await getTrips().catch((e) => { console.error('Data fetch error:', e.message); return []; });
   const monthly = groupByMonth(trips);
   const totalRevenue = trips.reduce((s, t) => s + (t.revenue || 0), 0);
   const totalDistance = trips.reduce((s, t) => s + (t.distance || 0), 0);

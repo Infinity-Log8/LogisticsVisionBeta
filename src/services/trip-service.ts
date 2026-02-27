@@ -46,9 +46,14 @@ export async function updateTrip(id: string, data: Partial<Omit<Trip, 'id'>>): P
 }
 
 export async function getTripById(id: string): Promise<Trip | null> {
-  const doc = await db.collection('trips').doc(id).get();
-  if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() } as Trip;
+  try {
+    const doc = await db.collection('trips').doc(id).get();
+    if (!doc.exists) return null;
+    return { id: doc.id, ...doc.data() } as Trip;
+  } catch (err) {
+    console.error('getTripById error:', err);
+    return null;
+  }
 }
 
 export async function getTrips(filters?: TripFilters): Promise<Trip[]> {
@@ -59,7 +64,12 @@ export async function getTrips(filters?: TripFilters): Promise<Trip[]> {
   if (filters?.startDate) q = q.where('date', '>=', filters.startDate);
   if (filters?.endDate) q = q.where('date', '<=', filters.endDate);
   q = q.orderBy('date', 'desc');
-  const snap = await q.get();
+  const snap = await q.get().catch((err: any) => {
+    if (err.code === 5 || err.message?.includes('NOT_FOUND') || err.message?.includes('index')) return null;
+    console.error("Firestore error in trip-service.ts:", err?.message || err);
+    return null;
+  });
+  if (!snap) return [];
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Trip));
 }
 

@@ -51,7 +51,7 @@ export default function PayrollCalculatorPage() {
 
     useEffect(() => {
         async function fetchData() {
-            const employeeData = await getDriversAction();
+            const employeeData = await getDriversAction().catch((e) => { console.error('Data fetch error:', e.message); return []; });
             setEmployees(employeeData);
             setInitialLoading(false);
         }
@@ -73,7 +73,7 @@ export default function PayrollCalculatorPage() {
             return;
         }
 
-        const actionResult = await getTripsForPayrollAction(data);
+        const actionResult = await getTripsForPayrollAction(data).catch((e) => { console.error('Data fetch error:', e.message); return []; });
         
         if ('error' in actionResult) {
             setLoading(false);

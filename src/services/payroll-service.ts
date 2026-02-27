@@ -47,7 +47,7 @@ export async function finalizePayrollRun(id: string): Promise<void> {
 export async function getPayrollRuns(): Promise<PayrollRun[]> {
   try {
     const db = ensureDbConnected();
-    const snapshot = await db.collection('payrollRuns').orderBy('paymentDate', 'desc').get();
+    const snapshot = await db.collection('payrollRuns').orderBy('paymentDate', 'desc').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
     if (snapshot.empty) return [];
     return snapshot.docs.map(doc => doc.data() as PayrollRun);
   } catch (error: any) {

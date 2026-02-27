@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { DeleteExpenseButton } from '../delete-expense-button';
 
 export default async function ExpenseDetailsPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const expense = await getExpenseById(id);
+  const expense = await getExpenseById(id).catch(() => null);
 
   if (!expense) {
     notFound();

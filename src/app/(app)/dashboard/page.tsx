@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import {
@@ -49,10 +50,12 @@ const getStatusVariant = (status: string) => {
 
 
 export default async function DashboardPage() {
-  // Fetch data
-  const customers = await getCustomers();
-  const trips = await getTrips();
-  const invoices = await getInvoices();
+  // Fetch data with error handling for empty/missing collections
+  const [customers, trips, invoices] = await Promise.all([
+    getCustomers().catch(() => []),
+    getTrips().catch(() => []),
+    getInvoices().catch(() => []),
+  ]);
   
   // Calculate metrics
   const totalRevenue = invoices

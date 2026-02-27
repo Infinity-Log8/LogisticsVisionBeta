@@ -55,7 +55,7 @@ export async function deleteQuote(id: string): Promise<void> {
 export async function getQuotes(): Promise<Quote[]> {
   try {
     const db = ensureDbConnected();
-    const quotesSnapshot = await db.collection('quotes').orderBy('dateIssued', 'desc').get();
+    const quotesSnapshot = await db.collection('quotes').orderBy('dateIssued', 'desc').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
     if (quotesSnapshot.empty) {
       return [];
     }
@@ -70,7 +70,7 @@ export async function getQuoteById(id: string): Promise<QuoteWithUrl | null> {
   try {
     const db = ensureDbConnected();
     const docRef = db.collection('quotes').doc(id);
-    const docSnap = await docRef.get();
+    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
 
     if (!docSnap.exists) {
       return null;

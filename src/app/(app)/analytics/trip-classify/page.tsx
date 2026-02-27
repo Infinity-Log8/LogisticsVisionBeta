@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 export const dynamic = 'force-dynamic';
 
 export default async function TripClassifyPage() {
-  const trips = await getTrips();
+  const trips = await getTrips().catch((e) => { console.error('Data fetch error:', e.message); return []; });
   const fmt = (n: number) => 'N$ ' + n.toLocaleString('en-NA', { minimumFractionDigits:2, maximumFractionDigits:2 });
 
   const oneWay   = trips.filter(t => t.tripType === 'one-way');

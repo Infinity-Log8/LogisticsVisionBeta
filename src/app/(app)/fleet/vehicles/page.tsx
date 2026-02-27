@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { getVehicles } from '@/services/vehicle-service';
 import { VehicleList } from './vehicle-list';
 
 export default async function VehiclesPage() {
-  const vehicles = await getVehicles();
+  const vehicles = await getVehicles().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   return (
     <div className="flex-1 space-y-8">

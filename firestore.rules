@@ -1,9 +1,145 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ─── Helper Functions ─────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Get the current user's Firestore role document
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && getUserRole() == role;
+    }
+
+    function isManager() {
+      return isAuthenticated() && (isAdmin() || hasRole('Manager'));
+    }
+
+    function isStaff() {
+      return isAuthenticated() && (isAdmin() || hasRole('Manager') || hasRole('Staff'));
+    }
+
+    // ─── users collection ─────────────────────────────────────────────────
+    // Users can read their own doc; admins/managers can read all; only admins can write
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isManager();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isOwner(userId);
+      allow delete: if isAdmin();
+    }
+
+    // ─── settings collection ──────────────────────────────────────────────
+    // All authenticated users can read; only admins can write
+    match /settings/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ─── customers collection ─────────────────────────────────────────────
+    match /customers/{customerId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isManager();
+    }
+
+    // ─── vehicles (fleet) collection ─────────────────────────────────────
+    match /vehicles/{vehicleId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isManager();
+    }
+
+    // ─── trips collection ─────────────────────────────────────────────────
+    match /trips/{tripId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isManager();
+    }
+
+    // ─── invoices collection ──────────────────────────────────────────────
+    match /invoices/{invoiceId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isManager();
+    }
+
+    // ─── quotes collection ────────────────────────────────────────────────
+    match /quotes/{quoteId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isManager();
+    }
+
+    // ─── expenses collection ──────────────────────────────────────────────
+    match /expenses/{expenseId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isManager();
+    }
+
+    // ─── fuelLogs collection ──────────────────────────────────────────────
+    match /fuelLogs/{logId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isManager();
+    }
+
+    // ─── employees collection ─────────────────────────────────────────────
+    // Employees can read their own record; managers can read all; only admins can write
+    match /employees/{employeeId} {
+      allow read: if isManager() || isOwner(employeeId);
+      allow create, update: if isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ─── payrollRuns collection ───────────────────────────────────────────
+    // Sensitive: only managers and admins can access
+    match /payrollRuns/{runId} {
+      allow read: if isManager();
+      allow create, update: if isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ─── payouts collection ───────────────────────────────────────────────
+    match /payouts/{payoutId} {
+      allow read: if isManager();
+      allow create, update: if isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ─── commissions collection ───────────────────────────────────────────
+    match /commissions/{commissionId} {
+      allow read: if isManager();
+      allow create, update: if isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ─── leaveRequests collection ─────────────────────────────────────────
+    // Employees can read/create their own; managers can read all and update status
+    match /leaveRequests/{requestId} {
+      allow read: if isManager() || (isAuthenticated() && resource.data.employeeId == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update: if isManager() || (isAuthenticated() && resource.data.employeeId == request.auth.uid);
+      allow delete: if isManager();
+    }
+
+    // ─── Deny everything else ─────────────────────────────────────────────
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

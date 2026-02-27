@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -9,8 +10,8 @@ import { getExpenses } from '@/services/expense-service';
 
 // In a real app, this would be fetched from your database/service layer.
 const getSystemTransactions = async (): Promise<Transaction[]> => {
-  const allInvoices = await getInvoices();
-  const allExpenses = await getExpenses();
+  const allInvoices = await getInvoices().catch((e) => { console.error('Data fetch error:', e.message); return []; });
+  const allExpenses = await getExpenses().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   const invoiceTransactions = allInvoices
     .filter(inv => inv.status === 'Paid')
@@ -35,7 +36,7 @@ const getSystemTransactions = async (): Promise<Transaction[]> => {
 
 
 export default async function ReconciliationPage() {
-  const initialSystemTransactions = await getSystemTransactions();
+  const initialSystemTransactions = await getSystemTransactions().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   return (
     <div className="flex-1 space-y-8">

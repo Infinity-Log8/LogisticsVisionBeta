@@ -43,11 +43,12 @@ export async function getLeaveRequests(options: { status?: LeaveRequest['status'
         query = query.where('status', '==', options.status);
     }
     
-    const snapshot = await query.orderBy('startDate', 'desc').get();
+    const snapshot = await query.orderBy('startDate', 'desc').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
     
     if (snapshot.empty) {
       return [];
     }
+    if (!snapshot) return [];
     return snapshot.docs.map((doc) => doc.data() as LeaveRequest);
   } catch (error: any) {
     console.warn(`Could not connect to Firestore to get leave requests. Returning empty array. Error: ${error.message}`);

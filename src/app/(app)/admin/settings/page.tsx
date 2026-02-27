@@ -40,7 +40,7 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     async function loadSettings() {
       setInitialLoading(true);
-      const settings = await getSettingsAction();
+      const settings = await getSettingsAction().catch((e) => { console.error('Data fetch error:', e.message); return []; });
       setCompanyName(settings.companyName || '');
       setCompanyAddress(settings.companyAddress || '');
       setCurrency(settings.currency || 'usd');

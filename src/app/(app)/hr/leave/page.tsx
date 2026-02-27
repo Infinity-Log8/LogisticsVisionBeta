@@ -118,7 +118,7 @@ export default function LeavePage() {
                 title: 'Request Submitted',
                 description: 'The new leave request has been created.',
             });
-            const updatedRequests = await getLeaveRequestsAction();
+            const updatedRequests = await getLeaveRequestsAction().catch((e) => { console.error('Data fetch error:', e.message); return []; });
             setRequests(updatedRequests);
             router.refresh();
             setIsDialogOpen(false);

@@ -1,128 +1,197 @@
+"use client";
 
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from 'lucide-react';
-import { Logo } from '@/components/logo';
+  signInWithEmailAndPassword,
+  signInWithRedirect,
+  getRedirectResult,
+  sendPasswordResetEmail,
+} from "firebase/auth";
+import { auth, googleProvider } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Truck } from "lucide-react";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const LoginPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
+
+  // Handle Google redirect result on page load
+  useEffect(() => {
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        router.push("/dashboard");
+      }
+    }).catch((error: any) => {
+      if (error.code !== "auth/null-user") {
+        setError(error.message);
+      }
+    });
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
-
+    setError(null);
     try {
-      await signIn(email, password);
-      router.push('/dashboard');
-    } catch (err: any) {
-      let errorMessage = 'An unexpected error occurred. Please try again.';
-      switch (err.code) {
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        case 'auth/user-disabled':
-          errorMessage = 'This user account has been disabled.';
-          break;
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-          errorMessage = 'Invalid email or password. Please try again.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Network error. Please check your connection.';
-          break;
-        case 'auth/invalid-credential':
-             errorMessage = 'Invalid credentials. Please check your email and password.';
-          break;
-        case 'auth/invalid-api-key':
-            errorMessage = 'Invalid Firebase API Key. Please check your configuration.';
-            break;
-        default:
-          if (err.message) {
-            errorMessage = err.message;
-          }
-      }
-      setError(errorMessage);
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/dashboard");
+    } catch (error: any) {
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError(null);
+    try {
+      await signInWithRedirect(auth, googleProvider);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Please enter your email to reset your password.");
+      return;
+    }
+    setError(null);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setError("sent:Password reset email sent. Check your inbox.");
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-                <Logo />
+    <div className="flex min-h-screen">
+      {/* Left Panel */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-gradient-to-br from-orange-600 via-orange-500 to-amber-500 text-white p-12">
+        <div className="flex flex-col items-center text-center">
+            <div className="flex items-center gap-4 mb-4">
+                <Truck size={48} />
+                <h1 className="text-4xl font-bold">Logistics Vision</h1>
             </div>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="grid gap-4">
-            {error && (
-              <Alert variant="destructive">
-                <Terminal className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+            <p className="text-xl mb-12">Track smarter. Deliver faster.</p>
+            <div className="grid grid-cols-1 gap-6 text-left">
+                <div className="bg-white/20 p-6 rounded-lg">
+                    <p className="text-3xl font-bold">12,400+</p>
+                    <p>Shipments Tracked</p>
+                </div>
+                <div className="bg-white/20 p-6 rounded-lg">
+                    <p className="text-3xl font-bold">340+</p>
+                    <p>Active Routes</p>
+                </div>
+                <div className="bg-white/20 p-6 rounded-lg">
+                    <p className="text-3xl font-bold">98.2%</p>
+                    <p>On-Time Delivery</p>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {/* Right Panel */}
+      <div className="w-full lg:w-1/2 bg-[#0f0f1a] flex items-center justify-center p-8">
+        <div className="w-full max-w-md space-y-6">
+          <div className="text-center text-white">
+            <h2 className="text-3xl font-bold">Welcome back</h2>
+            <p className="text-gray-400">Sign in to your account to continue</p>
+          </div>
+
+          {error && (
+            <div className={`p-4 rounded-md text-center ${error.startsWith("sent:") ? 'bg-green-900/20 text-green-400' : 'bg-red-900/20 text-red-400'}`}>
+              {error.startsWith("sent:") ? error.substring(5) : error}
+            </div>
+          )}
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full bg-transparent text-white hover:bg-white/10 hover:text-white border-white/30"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading || loading}
+          >
+            {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 
+            <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-69.4 69.4c-24.5-23.5-58.3-38.2-97.6-38.2-83.8 0-152.2 68.3-152.2 152.2s68.4 152.2 152.2 152.2c97.9 0 135.2-70.4 141.2-106.3H248v-85.3h236.1c2.3 12.7 3.9 26.1 3.9 40.2z"></path></svg>
+            }
+            Sign in with Google
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-white/30" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-[#0f0f1a] px-2 text-gray-400">
+                Or continue with email
+              </span>
+            </div>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-400">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="name@company.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
+                disabled={loading || googleLoading}
+                className="bg-transparent border-white/30 text-white"
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="password"  className="text-gray-400">Password</Label>
+                    <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        className="text-sm text-orange-500 hover:underline"
+                    >
+                        Forgot password?
+                    </button>
+                </div>
               <Input
                 id="password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
+                disabled={loading || googleLoading}
+                className="bg-transparent border-white/30 text-white"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+            <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700" disabled={loading || googleLoading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sign in
             </Button>
           </form>
-        </CardContent>
-        <CardFooter>
-          <p className="text-xs text-center text-muted-foreground w-full">
-            Hint: Use the credentials from the setup script.
+
+          <p className="text-center text-sm text-gray-400">
+            Don't have an account?{" "}
+            <Link href="/register" className="font-semibold text-orange-500 hover:underline">
+              Create one
+            </Link>
           </p>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default LoginPage;

@@ -37,7 +37,7 @@ export async function updateCustomer(id: string, customerData: Partial<CustomerD
 export async function getCustomers(): Promise<Customer[]> {
     try {
         const db = ensureDbConnected();
-        const customersSnapshot = await db.collection('customers').get();
+        const customersSnapshot = await db.collection('customers').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
         if (customersSnapshot.empty) {
           return [];
         }
@@ -54,7 +54,7 @@ export async function getCustomerById(id: string): Promise<Customer | null> {
   try {
     const db = ensureDbConnected();
     const docRef = db.collection('customers').doc(id);
-    const docSnap = await docRef.get();
+    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
 
     if (!docSnap.exists) {
       return null;

@@ -10,7 +10,7 @@ const BASE_SALARY = 6000;
 const OT_RATE_LOW = 0.40;
 
 export default async function DriverIncomePage() {
-  const trips = await getTrips();
+  const trips = await getTrips().catch((e) => { console.error('Data fetch error:', e.message); return []; });
   const fmt = (n: number) => 'N$ ' + n.toLocaleString('en-NA', { minimumFractionDigits:2, maximumFractionDigits:2 });
 
   // Group by driver

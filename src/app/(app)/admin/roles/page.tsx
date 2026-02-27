@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -6,7 +7,7 @@ import { RolesClientPage } from './roles-client';
 import { getUsers } from '@/services/user-service';
 
 export default async function RolesPage() {
-    const users = await getUsers();
+    const users = await getUsers().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   return (
     <div className="flex-1 space-y-8">

@@ -1,14 +1,65 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Admin users can read and write all files
-    match /{allPaths=**} {
-      allow read, write: if request.auth.token.admin == true;
+
+    // Helper: is user authenticated?
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    
-    // Authenticated non-admin users can upload to their own folder.
+
+    // Helper: is user an admin (via custom claim)?
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    // Helper: is the requesting user the owner of this path?
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // — Admin: full read/write access to everything ————————————————
+    match /{allPaths=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // — User-scoped storage: each user can read & write their own folder
     match /users/{userId}/{allPaths=**} {
-      allow write: if request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
+    }
+
+    // — Shared / public assets (e.g., company logos, shared docs)
+    // Authenticated users can read; only admins can write
+    match /shared/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // — Vehicle / fleet documents (e.g., registration, inspections)
+    // Any authenticated user can read; only admins can write
+    match /vehicles/{vehicleId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // — Employee documents (payslips, contracts, etc.)
+    // Each employee can read their own; admins can read/write all
+    match /employees/{employeeId}/{allPaths=**} {
+      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == employeeId);
+      allow write: if isAdmin();
+    }
+
+    // — Trip attachments
+    // Any authenticated user can read; only admins can write
+    match /trips/{tripId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // — Invoice attachments
+    // Any authenticated user can read; only admins can write
+    match /invoices/{invoiceId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
   }
 }

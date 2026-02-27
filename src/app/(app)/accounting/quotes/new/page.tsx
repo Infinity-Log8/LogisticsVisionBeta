@@ -63,7 +63,7 @@ export default function NewQuotePage() {
     async function initializeForm() {
       setInitialLoading(true);
       
-      const customersData = await getCustomers();
+      const customersData = await getCustomers().catch((e) => { console.error('Data fetch error:', e.message); return []; });
       setCustomers(customersData);
 
       const fromTripId = searchParams.get('fromTrip');
@@ -85,7 +85,7 @@ export default function NewQuotePage() {
       let values = defaultValues;
       
       if (fromTripId) {
-          const trip = await getTripByIdAction(fromTripId);
+          const trip = await getTripByIdAction(fromTripId).catch(() => null);
           if (trip) {
               const preTaxUnitPrice = trip.revenue / (1 + TAX_RATE_PERCENTAGE / 100);
               values = {

@@ -49,7 +49,7 @@ export function MaintenanceForm({ onResult, setLoading, loading }: MaintenanceFo
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     onResult(null); // Clear previous results
-    const result = await getRecommendationAction(values as MaintenanceInput);
+    const result = await getRecommendationAction(values as MaintenanceInput).catch((e) => { console.error('Data fetch error:', e.message); return []; });
     onResult(result);
     setLoading(false);
   }

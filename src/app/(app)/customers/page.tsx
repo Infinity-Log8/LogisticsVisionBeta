@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { getCustomers } from '@/services/customer-service';
 import { CustomerList } from './customer-list';
 
 export default async function CustomersPage() {
-  const customers = await getCustomers();
+  const customers = await getCustomers().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   return (
     <div className="flex-1 space-y-8">

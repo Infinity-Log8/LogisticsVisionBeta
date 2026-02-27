@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,7 @@ const getStatusVariant = (status: string) => {
 
 export default async function QuoteDetailsPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const quote = await getQuoteById(id);
+  const quote = await getQuoteById(id).catch(() => null);
 
   if (!quote) {
     notFound();

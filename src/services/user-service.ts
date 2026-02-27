@@ -36,7 +36,7 @@ export async function getUsers(): Promise<AppUser[]> {
     }
     const userRecords = await listAllUsers();
     
-    const userDocsSnapshot = await db.collection('users').get();
+    const userDocsSnapshot = await db.collection('users').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
     const rolesMap = new Map<string, string>();
     userDocsSnapshot.forEach(doc => {
         rolesMap.set(doc.id, doc.data().role || 'User');

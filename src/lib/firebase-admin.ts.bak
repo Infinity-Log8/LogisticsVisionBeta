@@ -4,7 +4,6 @@ import { getAuth, Auth } from "firebase-admin/auth";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 import { getStorage,  } from "firebase-admin/storage";
 import "dotenv/config";
-import * as fs from "fs";
 
 let adminApp: App | undefined;
 let auth: Auth | undefined;
@@ -14,14 +13,6 @@ let initializationError: string | null = null;
 
 function initializeFirebaseAdmin() {
   try {
-    // If GOOGLE_APPLICATION_CREDENTIALS points to a missing file, clear it
-    // so applicationDefault() falls back to GCP metadata server
-    const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    if (credPath && !fs.existsSync(credPath)) {
-      console.warn(`⚠️ GOOGLE_APPLICATION_CREDENTIALS points to missing file: ${credPath}. Clearing to use metadata server.`);
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    }
-
     // Use existing app if already initialized
     if (getApps().length > 0) {
       adminApp = getApps()[0];

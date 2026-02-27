@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { getPayrollRuns } from '@/services/payroll-service';
 import { PayrollClientPage } from './payroll-client';
 
 export default async function PayrollHistoryPage() {
-    const payrollRuns = await getPayrollRuns();
+    const payrollRuns = await getPayrollRuns().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
     return (
         <div className="flex-1 space-y-8">

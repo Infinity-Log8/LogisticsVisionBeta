@@ -47,7 +47,7 @@ export default function EditCustomerPage() {
     async function fetchCustomer() {
       if (!customerId) return;
       setInitialLoading(true);
-      const fetchedCustomer = await getCustomerById(customerId);
+      const fetchedCustomer = await getCustomerById(customerId).catch(() => null);
       if (fetchedCustomer) {
         setCustomer(fetchedCustomer);
         form.reset({

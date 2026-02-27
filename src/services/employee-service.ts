@@ -59,7 +59,7 @@ export async function getEmployees(options: GetEmployeesOptions = {}): Promise<E
         query = query.where('role', '==', options.role);
     }
     
-    const employeesSnapshot = await query.get();
+    const employeesSnapshot = await query.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
 
     if (employeesSnapshot.empty) {
       return [];
@@ -82,7 +82,7 @@ export async function getEmployeeById(id: string): Promise<Employee | null> {
   try {
     const db = ensureDbConnected();
     const docRef = db.collection('employees').doc(id);
-    const docSnap = await docRef.get();
+    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
 
     if (!docSnap.exists) {
       return null;

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import {
@@ -14,7 +15,7 @@ import { InvoiceTable } from './invoice-table';
 import { getInvoices } from '@/services/invoice-service';
 
 export default async function InvoicesPage() {
-  const invoices = await getInvoices();
+  const invoices = await getInvoices().catch((e) => { console.error('Data fetch error:', e.message); return []; });
   
   const allInvoices = invoices;
   const paidInvoices = invoices.filter((invoice) => invoice.status === 'Paid');

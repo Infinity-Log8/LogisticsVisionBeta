@@ -37,7 +37,7 @@ export async function updateVehicle(id: string, vehicleData: VehicleData): Promi
 export async function getVehicles(): Promise<Vehicle[]> {
   try {
     const db = ensureDbConnected();
-    const vehiclesSnapshot = await db.collection('vehicles').get();
+    const vehiclesSnapshot = await db.collection('vehicles').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
     if (vehiclesSnapshot.empty) {
       return [];
     }
@@ -54,7 +54,7 @@ export async function getVehicleById(id: string): Promise<Vehicle | null> {
   try {
     const db = ensureDbConnected();
     const docRef = db.collection('vehicles').doc(id);
-    const docSnap = await docRef.get();
+    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
 
     if (!docSnap.exists) {
       return null;

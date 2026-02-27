@@ -55,7 +55,7 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchUserRole() {
         if (user) {
-            const appUser = await getUserById(user.uid);
+            const appUser = await getUserById(user.uid).catch(() => null);
             if (appUser) {
                 setUserRole(appUser.role);
             }

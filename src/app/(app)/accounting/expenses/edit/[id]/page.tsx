@@ -49,7 +49,7 @@ export default function EditExpensePage() {
     async function fetchExpense() {
         if (!expenseId) return;
         setInitialLoading(true);
-        const fetchedExpense = await getExpenseById(expenseId);
+        const fetchedExpense = await getExpenseById(expenseId).catch(() => null);
         if (fetchedExpense) {
             setExpense(fetchedExpense);
             form.reset({

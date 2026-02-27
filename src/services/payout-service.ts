@@ -24,7 +24,7 @@ export async function createPayout(data: PayoutData): Promise<Payout> {
 export async function getPayouts(): Promise<Payout[]> {
   try {
     const db = ensureDbConnected();
-    const snapshot = await db.collection('payouts').orderBy('payoutDate', 'desc').get();
+    const snapshot = await db.collection('payouts').orderBy('payoutDate', 'desc').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
     if (snapshot.empty) return [];
     return snapshot.docs.map(doc => doc.data() as Payout);
   } catch (error: any) {

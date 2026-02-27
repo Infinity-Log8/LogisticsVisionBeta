@@ -79,7 +79,7 @@ export async function getInvoices(options: { startDate?: string, endDate?: strin
     
     query = query.orderBy('dateIssued', 'desc');
 
-    const invoicesSnapshot = await query.get();
+    const invoicesSnapshot = await query.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
     if (invoicesSnapshot.empty) {
       return [];
     }
@@ -94,7 +94,7 @@ export async function getInvoiceById(id: string): Promise<InvoiceWithUrl | null>
   try {
     const db = ensureDbConnected();
     const docRef = db.collection('invoices').doc(id);
-    const docSnap = await docRef.get();
+    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
 
     if (!docSnap.exists) {
       return null;

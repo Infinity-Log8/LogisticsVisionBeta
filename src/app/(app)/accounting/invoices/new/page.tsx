@@ -65,7 +65,7 @@ export default function NewInvoicePage() {
     async function initializeForm() {
       setInitialLoading(true);
       
-      const customersData = await getCustomers();
+      const customersData = await getCustomers().catch((e) => { console.error('Data fetch error:', e.message); return []; });
       setCustomers(customersData);
 
       const fromQuoteId = searchParams.get('fromQuote');
@@ -87,7 +87,7 @@ export default function NewInvoicePage() {
       let values = defaultValues;
       
       if (fromQuoteId) {
-        const quoteToConvert = await getQuoteByIdAction(fromQuoteId);
+        const quoteToConvert = await getQuoteByIdAction(fromQuoteId).catch(() => null);
         if (quoteToConvert) {
            values = {
             customerId: quoteToConvert.customerId,

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { getEmployees } from '@/services/employee-service';
 import { EmployeeList } from './employee-list';
 
 export default async function EmployeesPage() {
-    const employees = await getEmployees();
+    const employees = await getEmployees().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   return (
     <div className="flex-1 space-y-8">

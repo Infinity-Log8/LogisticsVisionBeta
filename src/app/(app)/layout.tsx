@@ -232,11 +232,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const invoices = await getInvoices();
+        const invoices = await getInvoices().catch((e) => { console.error('Data fetch error:', e.message); return []; });
         const count = invoices.filter(i => i.status === 'Unpaid' || i.status === 'Overdue').length;
         setUnpaidInvoicesCount(count);
 
-        const leaveCount = await getPendingLeaveCountAction();
+        const leaveCount = await getPendingLeaveCountAction().catch((e) => { console.error('Data fetch error:', e.message); return []; });
         setPendingLeaveCount(leaveCount);
 
       } catch (error) {

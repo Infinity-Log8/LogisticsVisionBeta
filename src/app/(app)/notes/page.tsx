@@ -25,7 +25,7 @@ export default function NotesPage() {
 
   async function loadNotes() {
     setLoading(true);
-    const data = await getNotesAction();
+    const data = await getNotesAction().catch((e) => { console.error('Data fetch error:', e.message); return []; });
     setNotes(data);
     setLoading(false);
   }

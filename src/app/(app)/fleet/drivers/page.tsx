@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { getDrivers } from '@/services/employee-service';
 import { DriverList } from './driver-list';
 
 export default async function DriversPage() {
-  const drivers = await getDrivers();
+  const drivers = await getDrivers().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   return (
     <div className="flex-1 space-y-8">

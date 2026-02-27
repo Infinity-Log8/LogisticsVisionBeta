@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, PlusCircle } from 'lucide-react';
@@ -8,7 +9,7 @@ import { getQuotes } from '@/services/quote-service';
 
 
 export default async function QuotesPage() {
-    const quotes = await getQuotes();
+    const quotes = await getQuotes().catch((e) => { console.error('Data fetch error:', e.message); return []; });
     
     const allQuotes = quotes;
     const draftQuotes = quotes.filter(q => q.status === 'Draft');

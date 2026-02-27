@@ -66,7 +66,7 @@ export async function getExpenses(options: { startDate?: string, endDate?: strin
         query = query.orderBy('date', 'desc');
     }
 
-    const expensesSnapshot = await query.get();
+    const expensesSnapshot = await query.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
     if (expensesSnapshot.empty) {
       return [];
     }
@@ -81,7 +81,7 @@ export async function getExpenseById(id: string): Promise<ExpenseWithUrl | null>
   try {
     const db = ensureDbConnected();
     const docRef = db.collection('expenses').doc(id);
-    const docSnap = await docRef.get();
+    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
 
     if (!docSnap.exists) {
       return null;

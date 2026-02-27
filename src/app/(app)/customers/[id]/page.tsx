@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,14 +39,14 @@ const getInvoiceStatusVariant = (status: string) => {
 
 export default async function CustomerDetailsPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const customer = await getCustomerById(id);
+  const customer = await getCustomerById(id).catch(() => null);
 
   if (!customer) {
     notFound();
   }
   
-  const allInvoices = await getInvoices();
-  const allTrips = await getTrips();
+  const allInvoices = await getInvoices().catch((e) => { console.error('Data fetch error:', e.message); return []; });
+  const allTrips = await getTrips().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   const customerTrips = allTrips.filter(trip => trip.customer === customer.company);
   const customerInvoices = allInvoices.filter(invoice => invoice.customer === customer.company);

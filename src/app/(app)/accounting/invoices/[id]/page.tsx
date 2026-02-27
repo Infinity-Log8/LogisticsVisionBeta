@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ const getStatusVariant = (status: string) => {
 
 export default async function InvoiceDetailsPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const invoice = await getInvoiceById(id);
+  const invoice = await getInvoiceById(id).catch(() => null);
 
   if (!invoice) {
     notFound();

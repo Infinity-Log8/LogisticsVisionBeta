@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ const getStatusVariant = (status: string) => {
 export default async function EmployeeDetailsPage({ params }: { params: { id: string } }) {
   const { id } = params;
 
-  const employee = await getEmployeeById(id);
+  const employee = await getEmployeeById(id).catch(() => null);
 
   if (!employee) {
       notFound();

@@ -61,7 +61,7 @@ export default function NewPayrollRunPage() {
   useEffect(() => {
     async function fetchData() {
         setInitialLoading(true);
-        const employeeData = await getEmployees();
+        const employeeData = await getEmployees().catch((e) => { console.error('Data fetch error:', e.message); return []; });
         setAllEmployees(employeeData);
         setInitialLoading(false);
     }

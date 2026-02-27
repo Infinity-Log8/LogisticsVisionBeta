@@ -51,7 +51,7 @@ export default function EditEmployeePage() {
     async function fetchEmployee() {
       if (!employeeId) return;
       setInitialLoading(true);
-      const fetchedEmployee = await getEmployeeById(employeeId);
+      const fetchedEmployee = await getEmployeeById(employeeId).catch(() => null);
       if (fetchedEmployee) {
         setEmployee(fetchedEmployee);
         form.reset({
