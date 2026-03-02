@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   signInWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
@@ -23,19 +22,7 @@ const LoginPage = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
 
-  // Handle Google redirect result on page load
-  useEffect(() => {
-    getRedirectResult(auth).then((result) => {
-      if (result?.user) {
-        router.push("/dashboard");
-      }
-    }).catch((error: any) => {
-      if (error.code !== "auth/null-user") {
-        setError(error.message);
-      }
-    });
-  }, [router]);
-
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -54,7 +41,8 @@ const LoginPage = () => {
     setGoogleLoading(true);
     setError(null);
     try {
-      await signInWithRedirect(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result?.user) router.push("/dashboard");
     } catch (error: any) {
       setError(error.message);
     } finally {
