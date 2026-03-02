@@ -1,57 +1,37 @@
-
-'use server';
-
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
-export type LeaveRequest = {
-  id: string;
-  employee: string;
-  employeeId: string;
-  startDate: string;
-  endDate: string;
-  reason: string;
-  status: 'Approved' | 'Pending' | 'Rejected';
-};
-
-export type LeaveRequestData = Omit<LeaveRequest, 'id'>;
-
-
-export async function createLeaveRequest(data: LeaveRequestData): Promise<LeaveRequest> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('leaveRequests').doc();
-  const newRequest: LeaveRequest = {
-      id: docRef.id,
-      ...data,
-  };
-  await docRef.set(newRequest);
-  return newRequest;
+export interface LeaveRequest {
+  id?: string;
+  organizationId: string;
+  employeeId?: string;
+  employeeName?: string;
+  type?: string;
+  startDate?: Date;
+  endDate?: Date;
+  status?: string;
+  reason?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export async function updateLeaveRequestStatus(id: string, status: LeaveRequest['status']): Promise<void> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('leaveRequests').doc(id);
-  await docRef.update({ status });
+export async function getLeaveRequests(organizationId: string): Promise<LeaveRequest[]> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('leave_requests').where('organizationId', '==', organizationId).orderBy('startDate', 'desc').get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as LeaveRequest));
 }
 
+export async function createLeaveRequest(data: Omit<LeaveRequest, 'id'>): Promise<LeaveRequest> {
+  const db = await ensureDbConnected();
+  const ref = await db.collection('leave_requests').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  return { id: ref.id, ...data };
+}
 
-export async function getLeaveRequests(options: { status?: LeaveRequest['status'] } = {}): Promise<LeaveRequest[]> {
-  try {
-    const db = ensureDbConnected();
-    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('leaveRequests');
+export async function updateLeaveRequest(id: string, data: Partial<LeaveRequest>): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('leave_requests').doc(id).update({ ...data, updatedAt: new Date() });
+}
 
-    if (options.status) {
-        query = query.where('status', '==', options.status);
-    }
-    
-    const snapshot = await query.orderBy('startDate', 'desc').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
-    
-    if (snapshot.empty) {
-      return [];
-    }
-    if (!snapshot) return [];
-    return snapshot.docs.map((doc) => doc.data() as LeaveRequest);
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get leave requests. Returning empty array. Error: ${error.message}`);
-    return [];
-  }
+export async function deleteLeaveRequest(id: string): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('leave_requests').doc(id).delete();
 }

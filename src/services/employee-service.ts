@@ -1,95 +1,47 @@
-
-'use server';
-
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
-export type Employee = {
-  id: string;
+export interface Employee {
+  id?: string;
+  organizationId: string;
   name: string;
-  email: string;
-  phone: string;
-  license?: string;
-  licenseExpiry?: string;
-  status: 'Active' | 'On Leave' | 'Inactive';
-  photoUrl: string;
-  totalTrips: number;
-  role: 'Driver' | 'Senior Driver' | 'Admin' | 'Operations' | 'Finance' | 'Assistance' | 'Dispatcher' | 'Mechanic' | 'Accountant' | 'HR Manager' | 'User';
-  baseSalary?: number;
-  leaveAllowance?: number;
-};
-
-export type EmployeeData = Omit<Employee, 'id'>;
-
-export async function createEmployee(employeeData: Partial<Omit<EmployeeData, 'id' | 'totalTrips' | 'photoUrl'>>): Promise<Employee> {
-  const db = ensureDbConnected();
-  const collectionRef = db.collection('employees');
-  const docRef = collectionRef.doc();
-  const newEmployee: Employee = {
-      id: docRef.id,
-      totalTrips: 0,
-      photoUrl: `https://i.pravatar.cc/150?u=${docRef.id}`,
-      name: employeeData.name || 'Unknown',
-      email: employeeData.email || 'unknown@example.com',
-      phone: employeeData.phone || 'N/A',
-      status: employeeData.status || 'Active',
-      leaveAllowance: employeeData.leaveAllowance || 20,
-      ...employeeData,
-      role: employeeData.role || 'User',
-  };
-  await docRef.set(newEmployee);
-  return newEmployee;
+  email?: string;
+  phone?: string;
+  role?: string;
+  department?: string;
+  status?: string;
+  startDate?: Date;
+  salary?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export async function updateEmployee(id: string, employeeData: Partial<Omit<EmployeeData, 'id' | 'photoUrl'>>): Promise<void> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('employees').doc(id);
-  await docRef.update(employeeData);
+export async function getEmployees(organizationId: string): Promise<Employee[]> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('employees').where('organizationId', '==', organizationId).get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
 }
 
-type GetEmployeesOptions = {
-    role?: string;
+export async function getEmployeeById(id: string, organizationId: string): Promise<Employee | null> {
+  const db = await ensureDbConnected();
+  const doc = await db.collection('employees').doc(id).get();
+  if (!doc.exists) return null;
+  const data = doc.data() as Employee;
+  if (data.organizationId !== organizationId) return null;
+  return { id: doc.id, ...data };
 }
 
-export async function getEmployees(options: GetEmployeesOptions = {}): Promise<Employee[]> {
-  try {
-    const db = ensureDbConnected();
-    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('employees');
-    
-    if (options.role) {
-        query = query.where('role', '==', options.role);
-    }
-    
-    const employeesSnapshot = await query.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
-
-    if (employeesSnapshot.empty) {
-      return [];
-    }
-    const employees = employeesSnapshot.docs.map(doc => doc.data() as Employee);
-    employees.sort((a,b) => a.name.localeCompare(b.name));
-    return employees;
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get employees. Returning empty array. Error: ${error.message}`);
-    return [];
-  }
+export async function createEmployee(data: Omit<Employee, 'id'>): Promise<Employee> {
+  const db = await ensureDbConnected();
+  const ref = await db.collection('employees').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  return { id: ref.id, ...data };
 }
 
-export async function getDrivers(): Promise<Employee[]> {
-    const employees = await getEmployees();
-    return employees.filter(e => e.role && e.role.toLowerCase().includes('driver'));
+export async function updateEmployee(id: string, data: Partial<Employee>): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('employees').doc(id).update({ ...data, updatedAt: new Date() });
 }
 
-export async function getEmployeeById(id: string): Promise<Employee | null> {
-  try {
-    const db = ensureDbConnected();
-    const docRef = db.collection('employees').doc(id);
-    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
-
-    if (!docSnap.exists) {
-      return null;
-    }
-    return docSnap.data() as Employee;
-  } catch (error) {
-     console.warn(`Could not connect to Firestore to get employee ${id}. Returning null. Error: ${error.message}`);
-     return null;
-  }
+export async function deleteEmployee(id: string): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('employees').doc(id).delete();
 }

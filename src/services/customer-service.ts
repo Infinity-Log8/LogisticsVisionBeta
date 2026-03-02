@@ -1,67 +1,46 @@
-
-'use server';
-
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
-export type Customer = {
-  id: string;
+export interface Customer {
+  id?: string;
+  organizationId: string;
   name: string;
-  email: string;
-  company: string;
-  status: 'Active' | 'Inactive';
-  phone: string;
-  address: string;
-};
-
-export type CustomerData = Omit<Customer, 'id'>;
-
-
-export async function createCustomer(customerData: CustomerData): Promise<Customer> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('customers').doc();
-  const newCustomer = {
-      id: docRef.id,
-      ...customerData,
-  };
-  await docRef.set(newCustomer);
-  return newCustomer;
+  email?: string;
+  phone?: string;
+  address?: string;
+  company?: string;
+  notes?: string;
+  status?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export async function updateCustomer(id: string, customerData: Partial<CustomerData>): Promise<void> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('customers').doc(id);
-  await docRef.update(customerData);
+export async function getCustomers(organizationId: string): Promise<Customer[]> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('customers').where('organizationId', '==', organizationId).orderBy('name').get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Customer));
 }
 
-
-export async function getCustomers(): Promise<Customer[]> {
-    try {
-        const db = ensureDbConnected();
-        const customersSnapshot = await db.collection('customers').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
-        if (customersSnapshot.empty) {
-          return [];
-        }
-        const customers = customersSnapshot.docs.map(doc => doc.data() as Customer);
-        customers.sort((a, b) => a.company.localeCompare(b.company));
-        return customers;
-    } catch (error: any) {
-        console.warn(`Could not connect to Firestore to get customers. Returning empty array. Error: ${error.message}`);
-        return [];
-    }
+export async function getCustomerById(id: string, organizationId: string): Promise<Customer | null> {
+  const db = await ensureDbConnected();
+  const doc = await db.collection('customers').doc(id).get();
+  if (!doc.exists) return null;
+  const data = doc.data() as Customer;
+  if (data.organizationId !== organizationId) return null;
+  return { id: doc.id, ...data };
 }
 
-export async function getCustomerById(id: string): Promise<Customer | null> {
-  try {
-    const db = ensureDbConnected();
-    const docRef = db.collection('customers').doc(id);
-    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
+export async function createCustomer(data: Omit<Customer, 'id'>): Promise<Customer> {
+  const db = await ensureDbConnected();
+  const ref = await db.collection('customers').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  return { id: ref.id, ...data };
+}
 
-    if (!docSnap.exists) {
-      return null;
-    }
-    return docSnap.data() as Customer;
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get customer ${id}. Returning null. Error: ${error.message}`);
-    return null;
-  }
+export async function updateCustomer(id: string, data: Partial<Customer>): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('customers').doc(id).update({ ...data, updatedAt: new Date() });
+}
+
+export async function deleteCustomer(id: string): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('customers').doc(id).delete();
 }

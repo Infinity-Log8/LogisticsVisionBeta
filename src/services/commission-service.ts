@@ -1,51 +1,31 @@
-
-'use server';
-
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
-export type Commission = {
-  id: string;
-  broker: string;
-  tripId: string;
-  status: 'Paid' | 'Pending';
-  payoutDate: string;
-  payoutId?: string;
-};
-
-export type CommissionData = Omit<Commission, 'id'>;
-
-export async function getCommissions(options: { status?: 'Paid' | 'Pending' } = {}): Promise<Commission[]> {
-  try {
-    const db = ensureDbConnected();
-    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('commissions');
-    if (options.status) {
-        query = query.where('status', '==', options.status);
-    }
-    const snapshot = await query.orderBy('payoutDate', 'desc').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
-
-    if (snapshot.empty) {
-      return [];
-    }
-    if (!snapshot) return [];
-    return snapshot.docs.map((doc) => doc.data() as Commission);
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get commissions. Returning empty array. Error: ${error.message}`);
-    return [];
-  }
+export interface Commission {
+  id?: string;
+  organizationId: string;
+  driverId?: string;
+  driverName?: string;
+  tripId?: string;
+  amount?: number;
+  rate?: number;
+  period?: string;
+  status?: string;
+  createdAt?: Date;
 }
 
-export async function updateCommissionsStatus(commissionIds: string[], payoutId: string, payoutDate: string): Promise<void> {
-    const db = ensureDbConnected();
-    const batch = db.batch();
+export async function getCommissions(organizationId: string): Promise<Commission[]> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('commissions').where('organizationId', '==', organizationId).orderBy('createdAt', 'desc').get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Commission));
+}
 
-    commissionIds.forEach(id => {
-        const commissionRef = db.collection('commissions').doc(id);
-        batch.update(commissionRef, {
-            status: 'Paid',
-            payoutId: payoutId,
-            payoutDate: payoutDate,
-        });
-    });
+export async function createCommission(data: Omit<Commission, 'id'>): Promise<Commission> {
+  const db = await ensureDbConnected();
+  const ref = await db.collection('commissions').add({ ...data, createdAt: new Date() });
+  return { id: ref.id, ...data };
+}
 
-    await batch.commit();
+export async function updateCommission(id: string, data: Partial<Commission>): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('commissions').doc(id).update(data);
 }

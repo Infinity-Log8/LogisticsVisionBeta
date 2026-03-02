@@ -1,67 +1,48 @@
-
-'use server';
-
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
-export type Vehicle = {
-  id: string;
-  model: string;
-  year: number;
-  licensePlate: string;
-  vin: string;
-  status: 'Operational' | 'In Repair' | 'Awaiting Inspection';
-  maintenanceDue: string;
-  driverId?: string;
-  driverName?: string;
-};
-
-export type VehicleData = Omit<Vehicle, 'id'>;
-
-export async function createVehicle(vehicleData: VehicleData): Promise<Vehicle> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('vehicles').doc();
-  const newVehicle = {
-      id: docRef.id,
-      ...vehicleData,
-  };
-  await docRef.set(newVehicle);
-  return newVehicle;
+export interface Vehicle {
+  id?: string;
+  organizationId: string;
+  make?: string;
+  model?: string;
+  year?: number;
+  licensePlate?: string;
+  vin?: string;
+  status?: string;
+  type?: string;
+  mileage?: number;
+  lastService?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export async function updateVehicle(id: string, vehicleData: VehicleData): Promise<void> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('vehicles').doc(id);
-  await docRef.update(vehicleData);
+export async function getVehicles(organizationId: string): Promise<Vehicle[]> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('vehicles').where('organizationId', '==', organizationId).get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Vehicle));
 }
 
-export async function getVehicles(): Promise<Vehicle[]> {
-  try {
-    const db = ensureDbConnected();
-    const vehiclesSnapshot = await db.collection('vehicles').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
-    if (vehiclesSnapshot.empty) {
-      return [];
-    }
-    const vehicles = vehiclesSnapshot.docs.map(doc => doc.data() as Vehicle);
-    vehicles.sort((a,b) => a.model.localeCompare(b.model));
-    return vehicles;
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get vehicles. Returning empty array. Error: ${error.message}`);
-    return [];
-  }
+export async function getVehicleById(id: string, organizationId: string): Promise<Vehicle | null> {
+  const db = await ensureDbConnected();
+  const doc = await db.collection('vehicles').doc(id).get();
+  if (!doc.exists) return null;
+  const data = doc.data() as Vehicle;
+  if (data.organizationId !== organizationId) return null;
+  return { id: doc.id, ...data };
 }
 
-export async function getVehicleById(id: string): Promise<Vehicle | null> {
-  try {
-    const db = ensureDbConnected();
-    const docRef = db.collection('vehicles').doc(id);
-    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
+export async function createVehicle(data: Omit<Vehicle, 'id'>): Promise<Vehicle> {
+  const db = await ensureDbConnected();
+  const ref = await db.collection('vehicles').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  return { id: ref.id, ...data };
+}
 
-    if (!docSnap.exists) {
-      return null;
-    }
-    return docSnap.data() as Vehicle;
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get vehicle ${id}. Returning null. Error: ${error.message}`);
-    return null;
-  }
+export async function updateVehicle(id: string, data: Partial<Vehicle>): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('vehicles').doc(id).update({ ...data, updatedAt: new Date() });
+}
+
+export async function deleteVehicle(id: string): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('vehicles').doc(id).delete();
 }

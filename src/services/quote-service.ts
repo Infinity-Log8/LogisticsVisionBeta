@@ -1,86 +1,46 @@
-
-'use server';
-
 import { ensureDbConnected } from '@/lib/firebase-admin';
-import type { LineItem } from './invoice-service'; // Reuse line item type
-import { getDownloadUrl } from './storage-service';
 
-export type Quote = {
-  id: string;
-  customer: string;
-  customerId: string;
-  dateIssued: string;
-  expiryDate: string;
-  status: 'Draft' | 'Sent' | 'Accepted' | 'Expired';
-  reference?: string;
-  taxType: 'exclusive' | 'inclusive' | 'no_tax';
-  lineItems: LineItem[];
-  subtotal: number;
-  totalTax: number;
-  total: number;
-  hasAttachment?: boolean;
-  attachmentPath?: string;
-};
-
-export type QuoteWithUrl = Quote & {
-    attachmentUrl?: string | null;
-};
-
-export type QuoteData = Omit<Quote, 'id'>;
-
-export async function createQuote(quoteData: Partial<QuoteData>): Promise<Quote> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('quotes').doc();
-  const newQuote: Quote = {
-      id: docRef.id,
-      hasAttachment: false,
-      ...quoteData,
-  } as Quote;
-  await docRef.set(newQuote);
-  return newQuote;
+export interface Quote {
+  id?: string;
+  organizationId: string;
+  customerId?: string;
+  customerName?: string;
+  amount?: number;
+  status?: string;
+  validUntil?: Date;
+  items?: any[];
+  notes?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export async function updateQuote(id: string, quoteData: Partial<QuoteData>): Promise<void> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('quotes').doc(id);
-  await docRef.update(quoteData);
+export async function getQuotes(organizationId: string): Promise<Quote[]> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('quotes').where('organizationId', '==', organizationId).orderBy('createdAt', 'desc').get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Quote));
+}
+
+export async function getQuoteById(id: string, organizationId: string): Promise<Quote | null> {
+  const db = await ensureDbConnected();
+  const doc = await db.collection('quotes').doc(id).get();
+  if (!doc.exists) return null;
+  const data = doc.data() as Quote;
+  if (data.organizationId !== organizationId) return null;
+  return { id: doc.id, ...data };
+}
+
+export async function createQuote(data: Omit<Quote, 'id'>): Promise<Quote> {
+  const db = await ensureDbConnected();
+  const ref = await db.collection('quotes').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  return { id: ref.id, ...data };
+}
+
+export async function updateQuote(id: string, data: Partial<Quote>): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('quotes').doc(id).update({ ...data, updatedAt: new Date() });
 }
 
 export async function deleteQuote(id: string): Promise<void> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('quotes').doc(id);
-  await docRef.delete();
-}
-
-export async function getQuotes(): Promise<Quote[]> {
-  try {
-    const db = ensureDbConnected();
-    const quotesSnapshot = await db.collection('quotes').orderBy('dateIssued', 'desc').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
-    if (quotesSnapshot.empty) {
-      return [];
-    }
-    return quotesSnapshot.docs.map((doc) => doc.data() as Quote);
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get quotes. Returning empty array. Error: ${error.message}`);
-    return [];
-  }
-}
-
-export async function getQuoteById(id: string): Promise<QuoteWithUrl | null> {
-  try {
-    const db = ensureDbConnected();
-    const docRef = db.collection('quotes').doc(id);
-    const docSnap = await docRef.get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
-
-    if (!docSnap.exists) {
-      return null;
-    }
-    const quote = docSnap.data() as Quote;
-    const attachmentUrl = await getDownloadUrl(quote.attachmentPath);
-
-    return { ...quote, attachmentUrl };
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get quote ${id}. Returning null. Error: ${error.message}`);
-    return null;
-  }
+  const db = await ensureDbConnected();
+  await db.collection('quotes').doc(id).delete();
 }

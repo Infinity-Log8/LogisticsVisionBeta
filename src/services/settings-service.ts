@@ -1,46 +1,32 @@
-import { db } from '@/lib/firebase-admin';
+import { ensureDbConnected } from '@/lib/firebase-admin';
 
-export type TaxRate = { name: string; rate: number; };
-
-export type AppSettings = {
-  id: string;
-  companyName: string;
-  companyAddress: string;
-  currency: string;
-  taxId: string;
-  defaultPaymentTerms: number;
-  invoiceFooter: string;
-  taxRates: TaxRate[];
-  loadRatePerKm: number;
-  fuelPricePerLitre: number;
-  driverOTRateLow: number;
-  driverOTRateHigh: number;
-  fuelEfficiencyLPer100Km: number;
-  brokerCommissionRate: number;
-};
-
-export const DEFAULT_SETTINGS: Omit<AppSettings, 'id'> = {
-  companyName: 'Logistics Vision',
-  companyAddress: '',
-  currency: 'NAD',
-  taxId: '',
-  defaultPaymentTerms: 30,
-  invoiceFooter: 'Thank you for your business.',
-  taxRates: [],
-  loadRatePerKm: 23.76,
-  fuelPricePerLitre: 19.00,
-  driverOTRateLow: 0.40,
-  driverOTRateHigh: 0.50,
-  fuelEfficiencyLPer100Km: 2.7,
-  brokerCommissionRate: 0.05,
-};
-
-export async function getSettings(): Promise<AppSettings> {
-  const doc = await db.collection('settings').doc('app').get();
-  if (!doc.exists) return { id: 'app', ...DEFAULT_SETTINGS };
-  return { id: 'app', ...DEFAULT_SETTINGS, ...doc.data() } as AppSettings;
+export interface OrgSettings {
+  id?: string;
+  organizationId: string;
+  companyName?: string;
+  companyEmail?: string;
+  companyPhone?: string;
+  companyAddress?: string;
+  logoUrl?: string;
+  currency?: string;
+  timezone?: string;
+  updatedAt?: Date;
 }
 
-export async function updateSettings(data: Partial<Omit<AppSettings, 'id'>>): Promise<void> {
-  await db.collection('settings').doc('app').set(data, { merge: true });
+export async function getSettings(organizationId: string): Promise<OrgSettings | null> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('settings').where('organizationId', '==', organizationId).limit(1).get();
+  if (snap.empty) return null;
+  const doc = snap.docs[0];
+  return { id: doc.id, ...doc.data() } as OrgSettings;
+}
+
+export async function upsertSettings(organizationId: string, data: Partial<OrgSettings>): Promise<void> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('settings').where('organizationId', '==', organizationId).limit(1).get();
+  if (snap.empty) {
+    await db.collection('settings').add({ organizationId, ...data, updatedAt: new Date() });
+  } else {
+    await snap.docs[0].ref.update({ ...data, updatedAt: new Date() });
+  }
 }

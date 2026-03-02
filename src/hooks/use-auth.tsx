@@ -1,114 +1,110 @@
 'use client';
 
+import { createContext, useContext, useEffect, useState } from 'react';
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
-import {
-  getAuth,
-  onAuthStateChanged,
   User,
+  onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  updateProfile,
-  updatePassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
-import { app } from '@/lib/firebase';
-import { usePathname, useRouter } from 'next/navigation';
-
-const auth = getAuth(app);
+import { auth } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
+  organizationId: string | null;
+  organizationName: string | null;
+  userRole: string | null;
   loading: boolean;
-  signIn: (email: string, pass: string) => Promise<any>;
-  signOut: () => Promise<void>;
-  updateUserProfile: (data: { displayName?: string | null, photoURL?: string | null }) => Promise<void>;
-  updateUserPassword: (newPassword: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<User>;
+  signInWithGoogle: () => Promise<User>;
+  logOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  organizationId: null,
+  organizationName: null,
+  userRole: null,
+  loading: true,
+  signIn: async () => {},
+  signUp: async () => { throw new Error('Not implemented'); },
+  signInWithGoogle: async () => { throw new Error('Not implemented'); },
+  logOut: async () => {},
+});
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [organizationName, setOrganizationName] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  // Timeout fallback: treat as unauthenticated if auth hangs
-  useEffect(() => { const t = setTimeout(() => setLoading(false), 5000); return () => clearTimeout(t); }, []);
-  const router = useRouter();
-  const pathname = usePathname();
+
+  const fetchOrg = async (uid: string) => {
+    try {
+      const res = await fetch(`/api/user/org?userId=${uid}`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrganizationId(data.organizationId ?? null);
+        setOrganizationName(data.organizationName ?? null);
+        setUserRole(data.role ?? null);
+      } else {
+        setOrganizationId(null);
+        setOrganizationName(null);
+        setUserRole(null);
+      }
+    } catch {
+      setOrganizationId(null);
+      setOrganizationName(null);
+      setUserRole(null);
+    }
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      if (firebaseUser) {
+        await fetchOrg(firebaseUser.uid);
+      } else {
+        setOrganizationId(null);
+        setOrganizationName(null);
+        setUserRole(null);
+      }
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (loading) return;
-
-    const isLoginPage = pathname === '/login';
-
-    // If we are not logged in and not on the login page, redirect to login
-    if (!user && !isLoginPage) {
-      router.push('/login');
-    } 
-    // If we are logged in and on the login page, redirect to dashboard
-    else if (user && isLoginPage) {
-      router.push('/dashboard');
-    }
-  }, [user, loading, pathname, router]);
-
-
-  const signIn = (email: string, pass: string) => {
-    return signInWithEmailAndPassword(auth, email, pass);
+  const signIn = async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
-  const signOut = async () => {
-    await firebaseSignOut(auth);
-    router.push('/login');
+  const signUp = async (email: string, password: string): Promise<User> => {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    return cred.user;
   };
 
-  const updateUserProfile = async (data: { displayName?: string | null, photoURL?: string | null }) => {
-    if (!auth.currentUser) throw new Error("Not authenticated");
-    await updateProfile(auth.currentUser, data);
-    // Manually update the user state to reflect changes immediately
-    if (auth.currentUser) {
-        setUser({...auth.currentUser});
-        // We also need to manually trigger a re-render of the router to update UserNav
-        router.refresh();
-    }
-  }
+  const signInWithGoogle = async (): Promise<User> => {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+  };
 
-  const updateUserPassword = async (newPassword: string) => {
-    if (!auth.currentUser) throw new Error("Not authenticated");
-    await updatePassword(auth.currentUser, newPassword);
-  }
+  const logOut = async () => {
+    await signOut(auth);
+    setOrganizationId(null);
+    setOrganizationName(null);
+    setUserRole(null);
+  };
 
-  const value = { user, loading, signIn, signOut, updateUserProfile, updateUserPassword };
-
-  // While checking auth, show a spinner on protected pages
-  // The new root page handles its own loading state.
-  if (loading && pathname !== '/login' && pathname !== '/') {
-    return (
-        <div className="flex h-screen w-full items-center justify-center">
-            <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
-        </div>
-    )
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, organizationId, organizationName, userRole, loading, signIn, signUp, signInWithGoogle, logOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

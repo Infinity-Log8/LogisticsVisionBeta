@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
-import { Settings, Users } from 'lucide-react';
+import { Settings, Users, Users2 } from 'lucide-react';
 
 export default function AdminPage() {
   return (
@@ -38,7 +38,20 @@ export default function AdminPage() {
                 </CardHeader>
             </Card>
         </Link>
-      </div>
+      <Link href="/admin/team">
+            <Card className="hover:bg-muted/50 transition-colors">
+              <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+                <div className="p-3 rounded-lg bg-primary/10 text-primary">
+                  <Users2 className="h-6 w-6" />
+                </div>
+                <div>
+                  <CardTitle>Team</CardTitle>
+                  <CardDescription>Invite users and manage your team.</CardDescription>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+        </div>
     </div>
   );
 }

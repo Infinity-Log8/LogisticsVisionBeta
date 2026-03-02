@@ -5,6 +5,7 @@ export type TripType = 'round-trip' | 'one-way';
 
 export type Trip = {
   id: string;
+  organizationId: string;
   customer: string;
   customerId: string;
   origin: string;
@@ -32,8 +33,11 @@ export type Trip = {
 };
 
 export type TripFilters = {
-  startDate?: string; endDate?: string;
-  customerId?: string; driverId?: string; status?: string;
+  startDate?: string;
+  endDate?: string;
+  customerId?: string;
+  driverId?: string;
+  status?: string;
 };
 
 export async function createTrip(data: Omit<Trip, 'id'>): Promise<Trip> {
@@ -45,19 +49,21 @@ export async function updateTrip(id: string, data: Partial<Omit<Trip, 'id'>>): P
   await db.collection('trips').doc(id).update(data);
 }
 
-export async function getTripById(id: string): Promise<Trip | null> {
+export async function getTripById(id: string, organizationId?: string): Promise<Trip | null> {
   try {
     const doc = await db.collection('trips').doc(id).get();
     if (!doc.exists) return null;
-    return { id: doc.id, ...doc.data() } as Trip;
+    const trip = { id: doc.id, ...doc.data() } as Trip;
+    if (organizationId && trip.organizationId !== organizationId) return null;
+    return trip;
   } catch (err) {
     console.error('getTripById error:', err);
     return null;
   }
 }
 
-export async function getTrips(filters?: TripFilters): Promise<Trip[]> {
-  let q: FirebaseFirestore.Query = db.collection('trips');
+export async function getTrips(organizationId: string, filters?: TripFilters): Promise<Trip[]> {
+  let q: FirebaseFirestore.Query = db.collection('trips').where('organizationId', '==', organizationId);
   if (filters?.customerId) q = q.where('customerId', '==', filters.customerId);
   if (filters?.driverId) q = q.where('driverId', '==', filters.driverId);
   if (filters?.status) q = q.where('status', '==', filters.status);

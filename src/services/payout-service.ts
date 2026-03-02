@@ -1,34 +1,30 @@
-
-'use server';
-
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
-export type Payout = {
-  id: string;
-  payoutDate: string;
-  status: 'Completed' | 'Scheduled';
-  totalAmount: number;
-  commissionsCount: number;
-};
-
-export type PayoutData = Omit<Payout, 'id'>;
-
-export async function createPayout(data: PayoutData): Promise<Payout> {
-  const db = ensureDbConnected();
-  const docRef = db.collection('payouts').doc();
-  const newPayout: Payout = { id: docRef.id, ...data };
-  await docRef.set(newPayout);
-  return newPayout;
+export interface Payout {
+  id?: string;
+  organizationId: string;
+  driverId?: string;
+  driverName?: string;
+  amount?: number;
+  period?: string;
+  status?: string;
+  paidAt?: Date;
+  createdAt?: Date;
 }
 
-export async function getPayouts(): Promise<Payout[]> {
-  try {
-    const db = ensureDbConnected();
-    const snapshot = await db.collection('payouts').orderBy('payoutDate', 'desc').get().catch((e) => { if ((e && (e.code === 5 || (e.message && e.message.includes('NOT_FOUND')))) ) return null; throw e; });
-    if (snapshot.empty) return [];
-    return snapshot.docs.map(doc => doc.data() as Payout);
-  } catch (error: any) {
-    console.warn(`Could not connect to Firestore to get payouts. Returning empty array. Error: ${error.message}`);
-    return [];
-  }
+export async function getPayouts(organizationId: string): Promise<Payout[]> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('payouts').where('organizationId', '==', organizationId).orderBy('createdAt', 'desc').get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Payout));
+}
+
+export async function createPayout(data: Omit<Payout, 'id'>): Promise<Payout> {
+  const db = await ensureDbConnected();
+  const ref = await db.collection('payouts').add({ ...data, createdAt: new Date() });
+  return { id: ref.id, ...data };
+}
+
+export async function updatePayout(id: string, data: Partial<Payout>): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('payouts').doc(id).update(data);
 }
