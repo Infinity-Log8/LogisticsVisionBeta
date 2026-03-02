@@ -1,5 +1,6 @@
 
 'use client';
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -45,7 +46,7 @@ type QuoteFormValues = z.infer<typeof quoteFormSchema>;
 
 const TAX_RATE_PERCENTAGE = 15;
 
-export default function NewQuotePage() {
+function NewQuotePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -362,5 +363,14 @@ export default function NewQuotePage() {
         </form>
       </Form>
     </div>
+  );
+}
+
+
+export default function NewQuotePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
+      <NewQuotePageContent />
+    </Suspense>
   );
 }

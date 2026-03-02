@@ -1,5 +1,6 @@
 
 'use client';
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,7 +31,7 @@ const expenseFormSchema = z.object({
 
 type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
 
-export default function NewExpensePage() {
+function NewExpensePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -208,5 +209,14 @@ export default function NewExpensePage() {
         </form>
       </Form>
     </div>
+  );
+}
+
+
+export default function NewExpensePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
+      <NewExpensePageContent />
+    </Suspense>
   );
 }

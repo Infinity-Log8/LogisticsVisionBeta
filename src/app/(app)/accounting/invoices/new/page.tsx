@@ -1,5 +1,6 @@
 
 'use client';
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -47,7 +48,7 @@ type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 const TAX_RATE_PERCENTAGE = 15;
 
 
-export default function NewInvoicePage() {
+function NewInvoicePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -356,5 +357,14 @@ export default function NewInvoicePage() {
         </form>
       </Form>
     </div>
+  );
+}
+
+
+export default function NewInvoicePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
+      <NewInvoicePageContent />
+    </Suspense>
   );
 }
