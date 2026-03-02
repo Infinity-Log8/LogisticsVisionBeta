@@ -32,6 +32,7 @@ import { getTrips } from '@/services/trip-service';
 import { getInvoices } from '@/services/invoice-service';
 import { getCustomers } from '@/services/customer-service';
 import { isSameDay, subDays, isBefore } from 'date-fns';
+import { getServerOrgId } from '@/lib/server-auth';
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -50,6 +51,16 @@ const getStatusVariant = (status: string) => {
 
 
 export default async function DashboardPage() {
+  const organizationId = await getServerOrgId();
+  if (!organizationId) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center text-muted-foreground">
+          <p>Loading your workspace...</p>
+        </div>
+      </div>
+    );
+  }
   // Fetch data with error handling for empty/missing collections
   const [customers, trips, invoices] = await Promise.all([
     getCustomers().catch(() => []),

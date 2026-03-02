@@ -51,6 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setOrganizationId(data.organizationId ?? null);
         setOrganizationName(data.organizationName ?? null);
         setUserRole(data.role ?? null);
+        // Set cookie so server components can access organizationId
+        if (data.organizationId) {
+          document.cookie = `orgId=${data.organizationId}; path=/; max-age=86400; SameSite=Lax`;
+        }
       } else {
         setOrganizationId(null);
         setOrganizationName(null);
@@ -98,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setOrganizationId(null);
     setOrganizationName(null);
     setUserRole(null);
+    document.cookie = 'orgId=; path=/; max-age=0';
   };
 
   return (
