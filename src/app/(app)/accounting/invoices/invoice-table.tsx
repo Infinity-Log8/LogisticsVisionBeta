@@ -12,6 +12,7 @@ import { MarkAsPaidMenuItem } from './mark-as-paid-menu-item';
 import { DeleteInvoiceMenuItem } from './delete-invoice-menu-item';
 import { useToast } from '@/hooks/use-toast';
 import { deleteInvoiceAction, markInvoiceAsPaidAction } from './actions';
+import type { Invoice } from '@/services/invoice-service';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,25 +24,26 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-type Invoice = {
-  id: string;
-  customer: string;
-  customerId: string;
-  dateIssued: string;
-  dueDate: string;
-  total: number;
-  status: string;
-};
-
 type InvoiceTableProps = {
   invoices: Invoice[];
 };
 
-function getStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
+function getStatusVariant(status?: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
     case 'Paid': return 'default';
     case 'Overdue': return 'destructive';
+    case 'Draft': return 'outline';
     default: return 'secondary';
+  }
+}
+
+function formatDate(date?: Date | string): string {
+  if (!date) return '-';
+  try {
+    const d = date instanceof Date ? date : new Date(date);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch {
+    return String(date);
   }
 }
 
@@ -63,7 +65,7 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(invoices.map((i) => i.id)));
+      setSelectedIds(new Set(invoices.map((i) => i.id!).filter(Boolean)));
     }
   };
 
@@ -110,29 +112,15 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
         <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/50 px-4 py-2">
           <span className="text-sm font-medium">{selectedIds.size} invoice{selectedIds.size > 1 ? 's' : ''} selected</span>
           <div className="flex items-center gap-2 ml-auto">
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-2"
-              onClick={() => setShowBulkPayDialog(true)}
-              disabled={isPending}
-            >
+            <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowBulkPayDialog(true)} disabled={isPending}>
               <CreditCard className="h-4 w-4" />
               Mark as Paid / Reconcile
             </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              className="gap-2"
-              onClick={() => setShowBulkDeleteDialog(true)}
-              disabled={isPending}
-            >
+            <Button size="sm" variant="destructive" className="gap-2" onClick={() => setShowBulkDeleteDialog(true)} disabled={isPending}>
               <Trash2 className="h-4 w-4" />
               Delete Selected
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
-              Clear
-            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>Clear</Button>
           </div>
         </div>
       )}
@@ -160,13 +148,13 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
           {invoices.map((invoice) => (
             <TableRow
               key={invoice.id}
-              data-state={selectedIds.has(invoice.id) ? 'selected' : undefined}
-              className={selectedIds.has(invoice.id) ? 'bg-muted/30' : undefined}
+              data-state={selectedIds.has(invoice.id!) ? 'selected' : undefined}
+              className={selectedIds.has(invoice.id!) ? 'bg-muted/30' : undefined}
             >
               <TableCell>
                 <Checkbox
-                  checked={selectedIds.has(invoice.id)}
-                  onCheckedChange={() => toggleOne(invoice.id)}
+                  checked={selectedIds.has(invoice.id!)}
+                  onCheckedChange={() => invoice.id && toggleOne(invoice.id)}
                   aria-label={`Select invoice ${invoice.id}`}
                 />
               </TableCell>
@@ -174,13 +162,19 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
                 <Link href={`/accounting/invoices/${invoice.id}`} className="text-primary hover:underline">{invoice.id}</Link>
               </TableCell>
               <TableCell>
-                <Link href={`/customers/${invoice.customerId}`} className="text-primary hover:underline">{invoice.customer}</Link>
+                {invoice.customerId ? (
+                  <Link href={`/customers/${invoice.customerId}`} className="text-primary hover:underline">{invoice.customerName || invoice.customerId}</Link>
+                ) : (
+                  <span className="text-muted-foreground">-</span>
+                )}
               </TableCell>
-              <TableCell>{invoice.dateIssued}</TableCell>
-              <TableCell>{invoice.dueDate}</TableCell>
-              <TableCell className="text-right">{invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</TableCell>
+              <TableCell>{formatDate(invoice.issueDate)}</TableCell>
+              <TableCell>{formatDate(invoice.dueDate)}</TableCell>
+              <TableCell className="text-right">
+                {invoice.amount != null ? invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '-'}
+              </TableCell>
               <TableCell>
-                <Badge variant={getStatusVariant(invoice.status)}>{invoice.status}</Badge>
+                <Badge variant={getStatusVariant(invoice.status)}>{invoice.status ?? 'Unknown'}</Badge>
               </TableCell>
               <TableCell>
                 <DropdownMenu>
@@ -198,9 +192,9 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
                     <DropdownMenuItem asChild>
                       <Link href={`/accounting/invoices/edit/${invoice.id}`}>Edit</Link>
                     </DropdownMenuItem>
-                    <MarkAsPaidMenuItem invoiceId={invoice.id} invoiceStatus={invoice.status} />
+                    <MarkAsPaidMenuItem invoiceId={invoice.id!} invoiceStatus={invoice.status as Invoice['status']} />
                     <DropdownMenuSeparator />
-                    <DeleteInvoiceMenuItem invoiceId={invoice.id} />
+                    <DeleteInvoiceMenuItem invoiceId={invoice.id!} />
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -213,17 +207,11 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {selectedIds.size} Invoice(s)?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the selected invoices. This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This will permanently delete the selected invoices. This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBulkDelete}
-              disabled={isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleBulkDelete} disabled={isPending} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isPending ? 'Deleting...' : 'Delete All Selected'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -234,9 +222,7 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Mark {selectedIds.size} Invoice(s) as Paid?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will mark all selected invoices as paid and reconciled.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This will mark all selected invoices as paid and reconciled.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
