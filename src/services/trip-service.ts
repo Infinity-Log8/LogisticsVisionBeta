@@ -1,3 +1,4 @@
+'use server';
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 

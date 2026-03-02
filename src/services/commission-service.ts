@@ -1,3 +1,4 @@
+'use server';
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
 export interface Commission {
