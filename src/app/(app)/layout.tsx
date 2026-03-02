@@ -38,7 +38,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { getInvoices } from '@/services/invoice-service';
 import { getPendingLeaveCountAction } from './hr/leave/actions';
 import {
   CommandDialog,
@@ -232,8 +231,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const invoices = await getInvoices().catch((e) => { console.error('Data fetch error:', e.message); return []; });
-        const count = invoices.filter(i => i.status === 'Unpaid' || i.status === 'Overdue').length;
+        const countRes = await fetch('/api/invoices/count').catch(() => null);
+        const count = countRes ? (await countRes.json()).count : 0;
         setUnpaidInvoicesCount(count);
 
         const leaveCount = await getPendingLeaveCountAction().catch((e) => { console.error('Data fetch error:', e.message); return []; });
