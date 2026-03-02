@@ -27,14 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Combobox } from '@/components/ui/combobox';
+import { LocationInput } from '@/components/location-input';
 
 import type { Trip } from '@/services/trip-service';
 import type { Customer } from '@/services/customer-service';
 import type { Employee } from '@/services/employee-service';
 import type { Vehicle } from '@/services/vehicle-service';
 import { updateTripAction } from '../../actions';
-import { mockLocations } from '@/data/locations';
 
 const tripFormSchema = z.object({
   customerId: z.string().min(1, 'Customer is required'),
@@ -197,15 +196,7 @@ export function EditTripForm({ trip, customers, drivers, vehicles }: EditTripFor
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Origin</FormLabel>
-                       <Combobox
-                        options={mockLocations}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Select origin..."
-                        searchPlaceholder="Search locations..."
-                        emptyPlaceholder="No location found."
-                        disabled={loading}
-                      />
+                       <LocationInput value={field.value} onChange={field.onChange} placeholder="Enter origin city or address..." disabled={loading} />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -216,15 +207,7 @@ export function EditTripForm({ trip, customers, drivers, vehicles }: EditTripFor
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Destination</FormLabel>
-                      <Combobox
-                        options={mockLocations}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Select destination..."
-                        searchPlaceholder="Search locations..."
-                        emptyPlaceholder="No location found."
-                        disabled={loading}
-                      />
+                      <LocationInput value={field.value} onChange={field.onChange} placeholder="Enter destination city or address..." disabled={loading} />
                       <FormMessage />
                     </FormItem>
                   )}
