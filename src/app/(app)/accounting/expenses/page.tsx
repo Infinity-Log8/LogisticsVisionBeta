@@ -60,7 +60,7 @@ export default async function ExpensesPage() {
                     ) : (
                         expenses.map((expense) => (
                             <TableRow key={expense.id}>
-                                <TableCell>{expense.date}</TableCell>
+                                <TableCell>{expense.date ? (expense.date instanceof Date ? expense.date.toLocaleDateString("en-US") : new Date(expense.date as any).toLocaleDateString("en-US")) : "-"}</TableCell>
                                 <TableCell><Badge variant="outline">{expense.category}</Badge></TableCell>
                                 <TableCell>
                                     <Link href={`/accounting/expenses/${expense.id}`} className="font-medium text-primary hover:underline">{expense.description}</Link>
@@ -70,7 +70,7 @@ export default async function ExpensesPage() {
                                     {expense.tripId ? <Link href={`/trips/${expense.tripId}`} className="text-primary hover:underline flex items-center gap-2"><TruckIcon className="h-4 w-4" />{expense.tripId}</Link> : 'N/A'}
                                 </TableCell>
                                 <TableCell className="text-center">{expense.hasAttachment ? <FileIcon className="h-4 w-4 mx-auto" /> : ''}</TableCell>
-                                <TableCell className="text-right font-mono">${expense.amount.toFixed(2)}</TableCell>
+                                <TableCell className="text-right font-mono">${expense.amount != null ? expense.amount.toFixed(2) : "0.00"}</TableCell>
                                 <TableCell>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild><Button aria-haspopup="true" size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /><span className="sr-only">Toggle menu</span></Button></DropdownMenuTrigger>
@@ -78,7 +78,7 @@ export default async function ExpensesPage() {
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                         <DropdownMenuItem asChild><Link href={`/accounting/expenses/${expense.id}`}>View Details</Link></DropdownMenuItem>
                                         <DropdownMenuItem asChild><Link href={`/accounting/expenses/edit/${expense.id}`}>Edit</Link></DropdownMenuItem>
-                                        <DeleteExpenseMenuItem expenseId={expense.id} />
+                                        <DeleteExpenseMenuItem expenseId={expense.id!} />
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
