@@ -132,10 +132,10 @@ export function NewTripForm({ customers, drivers, vehicles }: Props) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField control={form.control} name="origin" render={({ field }) => (
-                <FormItem><FormLabel>Origin</FormLabel><FormControl><Input placeholder="City / Location" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Origin / From</FormLabel><FormControl><LocationInput value={field.value} onChange={field.onChange} placeholder="Enter city, address or region..." disabled={loading} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="destination" render={({ field }) => (
-                <FormItem><FormLabel>Destination</FormLabel><FormControl><Input placeholder="City / Location" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Destination / To</FormLabel><FormControl><LocationInput value={field.value} onChange={field.onChange} placeholder="Enter city, address or region..." disabled={loading} /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
