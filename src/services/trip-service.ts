@@ -63,8 +63,8 @@ export async function getTripById(id: string, organizationId?: string): Promise<
   }
 }
 
-export async function getTrips(organizationId: string, filters?: TripFilters): Promise<Trip[]> {
-  let q: FirebaseFirestore.Query = db.collection('trips').where('organizationId', '==', organizationId);
+export async function getTrips(organizationId?: string, filters?: TripFilters): Promise<Trip[]> {
+  let q: FirebaseFirestore.Query = db.collection('trips').where("organizationId", "==", organizationId || "");
   if (filters?.customerId) q = q.where('customerId', '==', filters.customerId);
   if (filters?.driverId) q = q.where('driverId', '==', filters.driverId);
   if (filters?.status) q = q.where('status', '==', filters.status);
