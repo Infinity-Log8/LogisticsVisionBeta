@@ -103,7 +103,7 @@ const getExpensesTool = ai.defineTool(
     }),
     outputSchema: z.array(ExpenseSchema),
   },
-  async ({ tripId }) => getExpenses({ tripId })
+  async ({ tripId }) => { const all = await getExpenses(); return tripId ? all.filter(e => e.tripId === tripId) : all; }
 );
 
 export async function getFinancialAnalysis(input: FinancialAnalystInput): Promise<FinancialAnalystOutput> {

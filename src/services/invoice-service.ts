@@ -16,18 +16,21 @@ export interface Invoice {
   updatedAt?: Date;
 }
 
-export async function getInvoices(organizationId: string): Promise<Invoice[]> {
+export async function getInvoices(organizationId?: string): Promise<Invoice[]> {
   const db = await ensureDbConnected();
-  const snap = await db.collection('invoices').where('organizationId', '==', organizationId).orderBy('issueDate', 'desc').get();
+  const query = organizationId
+    ? db.collection('invoices').where('organizationId', '==', organizationId).orderBy('issueDate', 'desc')
+    : db.collection('invoices').orderBy('issueDate', 'desc');
+  const snap = await query.get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Invoice));
 }
 
-export async function getInvoiceById(id: string, organizationId: string): Promise<Invoice | null> {
+export async function getInvoiceById(id: string, organizationId?: string): Promise<Invoice | null> {
   const db = await ensureDbConnected();
   const doc = await db.collection('invoices').doc(id).get();
   if (!doc.exists) return null;
   const data = doc.data() as Invoice;
-  if (data.organizationId !== organizationId) return null;
+  if (organizationId && data.organizationId !== organizationId) return null;
   return { id: doc.id, ...data };
 }
 

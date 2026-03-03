@@ -11,14 +11,31 @@ export interface Expense {
   vendor?: string;
   receiptUrl?: string;
   status?: string;
+  paidBy?: string;
+  tripId?: string | null;
+  notes?: string;
+  hasAttachment?: boolean;
+  attachmentPath?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export async function getExpenses(organizationId: string): Promise<Expense[]> {
+export type ExpenseData = Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>;
+export type ExpenseWithUrl = Expense & { receiptUrl?: string };
+
+export async function getExpenses(organizationId?: string): Promise<Expense[]> {
   const db = await ensureDbConnected();
-  const snap = await db.collection('expenses').where('organizationId', '==', organizationId).orderBy('date', 'desc').get();
+  const query = organizationId
+    ? db.collection('expenses').where('organizationId', '==', organizationId).orderBy('date', 'desc')
+    : db.collection('expenses').orderBy('date', 'desc');
+  const snap = await query.get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
+}
+
+export async function getExpenseById(id: string): Promise<Expense | null> {
+  const db = await ensureDbConnected();
+  const doc = await db.collection('expenses').doc(id).get();
+  return { id: doc.id, ...doc.data() } as Expense;
 }
 
 export async function createExpense(data: Omit<Expense, 'id'>): Promise<Expense> {
