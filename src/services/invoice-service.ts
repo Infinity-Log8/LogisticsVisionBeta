@@ -1,16 +1,58 @@
 'use server';
+
+export type InvoiceStatus = 'Paid' | 'Unpaid' | 'Overdue' | 'Draft';
+export type InvoiceTaxType = 'exclusive' | 'inclusive' | 'none';
+
+export interface LineItem {
+  id?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface InvoiceData {
+  invoiceNumber?: string;
+  customerId?: string;
+  customer?: string;
+  customerName?: string;
+  reference?: string;
+  dateIssued?: string;
+  dueDate?: string;
+  status?: InvoiceStatus;
+  taxType?: InvoiceTaxType;
+  lineItems?: LineItem[];
+  subtotal?: number;
+  totalTax?: number;
+  total?: number;
+  amount?: number;
+  notes?: string;
+  hasAttachment?: boolean;
+  attachmentPath?: string;
+  organizationId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface InvoiceWithUrl extends Invoice {
+  attachmentUrl?: string;
+}
+
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
 export interface Invoice {
+  invoiceNumber?: string;
+  reference?: string;
+  
   id?: string;
   organizationId: string;
   customerId?: string;
   customerName?: string;
   amount?: number;
-  status?: string;
-  dueDate?: Date;
-  issueDate?: Date;
-  items?: any[];
+  status?: InvoiceStatus;
+  dueDate?: string | Date;
+  issueDate?: string | Date;
+  items?: LineItem[];
   notes?: string;
   createdAt?: Date;
   updatedAt?: Date;

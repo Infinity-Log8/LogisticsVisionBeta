@@ -58,7 +58,7 @@ export async function createInvoiceAction(
     // If there's a file, upload it and update the record
     if (file && file.size > 0) {
         const { gsPath } = await uploadFile(file, `invoices/${newInvoice.id}`);
-        await updateInvoice(newInvoice.id, {
+        await updateInvoice(newInvoice.id!, {
             hasAttachment: true,
             attachmentPath: gsPath,
         });

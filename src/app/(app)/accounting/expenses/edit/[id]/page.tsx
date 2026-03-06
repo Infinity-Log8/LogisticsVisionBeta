@@ -54,6 +54,9 @@ export default function EditExpensePage() {
             setExpense(fetchedExpense);
             form.reset({
                 ...fetchedExpense,
+                date: fetchedExpense.date instanceof Date
+                  ? fetchedExpense.date.toISOString().split('T')[0]
+                  : typeof fetchedExpense.date === 'string' ? fetchedExpense.date : '',
                 tripId: fetchedExpense.tripId || '',
                 notes: fetchedExpense.notes || '',
             });

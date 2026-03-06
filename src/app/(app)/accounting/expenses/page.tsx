@@ -1,92 +1,76 @@
-export const dynamic = 'force-dynamic';
 import Link from 'next/link';
+import { ArrowLeft, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, PlusCircle, File as FileIcon, Truck as TruckIcon, MoreHorizontal } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getExpenses } from '@/services/expense-service';
-import { DeleteExpenseMenuItem } from './delete-expense-menu-item';
+import { ExpenseTable } from './expense-table';
 
 export default async function ExpensesPage() {
-  const expenses = await getExpenses().catch((e) => { console.error('Data fetch error:', e.message); return []; });
+  const expenses = await getExpenses().catch((e) => {
+    console.error('Data fetch error:', e.message); return [];
+  });
+
+  const totalAmount = expenses.reduce((sum, e) => sum + (e.amount ?? 0), 0);
+  const byCategory: Record<string, number> = {};
+  expenses.forEach((e) => {
+    const cat = e.category || 'Other';
+    byCategory[cat] = (byCategory[cat] || 0) + (e.amount ?? 0);
+  });
 
   return (
-    <div className="flex-1 space-y-8">
+    <div className="flex-1 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-                <Button variant="outline" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
-            </Link>
-            <div>
-                <h1 className="text-3xl font-bold">Expenses</h1>
-                <p className="text-muted-foreground">Track and manage all business expenses.</p>
-            </div>
+          <Link href="/dashboard">
+            <Button variant="outline" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Expenses</h1>
+            <p className="text-muted-foreground">Track and manage all business expenses.</p>
+          </div>
         </div>
         <Button asChild>
-            <Link href="/accounting/expenses/new">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Expense
-            </Link>
+          <Link href="/accounting/expenses/new">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Expense
+          </Link>
         </Button>
       </div>
-       <Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Total Expenses</CardDescription>
+            <CardTitle className="text-2xl">R {totalAmount.toFixed(2)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Total Records</CardDescription>
+            <CardTitle className="text-2xl">{expenses.length}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Top Category</CardDescription>
+            <CardTitle className="text-2xl">
+              {Object.keys(byCategory).length > 0
+                ? Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0][0]
+                : '—'}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      <Card>
         <CardHeader>
-            <CardTitle>Expense List</CardTitle>
-            <CardDescription>A list of all recent business expenses from Firestore.</CardDescription>
+          <CardTitle>All Expenses</CardTitle>
+          <CardDescription>
+            Select expenses to bulk delete. Use the row actions to view or edit individual records.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Paid By</TableHead>
-                        <TableHead>Trip</TableHead>
-                        <TableHead className="text-center">Receipt</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead><span className="sr-only">Actions</span></TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {expenses.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={8} className="h-24 text-center">
-                                No expenses found.
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        expenses.map((expense) => (
-                            <TableRow key={expense.id}>
-                                <TableCell>{expense.date ? (expense.date instanceof Date ? expense.date.toLocaleDateString("en-US") : new Date(expense.date as any).toLocaleDateString("en-US")) : "-"}</TableCell>
-                                <TableCell><Badge variant="outline">{expense.category}</Badge></TableCell>
-                                <TableCell>
-                                    <Link href={`/accounting/expenses/${expense.id}`} className="font-medium text-primary hover:underline">{expense.description}</Link>
-                                </TableCell>
-                                <TableCell>{expense.paidBy}</TableCell>
-                                <TableCell>
-                                    {expense.tripId ? <Link href={`/trips/${expense.tripId}`} className="text-primary hover:underline flex items-center gap-2"><TruckIcon className="h-4 w-4" />{expense.tripId}</Link> : 'N/A'}
-                                </TableCell>
-                                <TableCell className="text-center">{expense.hasAttachment ? <FileIcon className="h-4 w-4 mx-auto" /> : ''}</TableCell>
-                                <TableCell className="text-right font-mono">${expense.amount != null ? expense.amount.toFixed(2) : "0.00"}</TableCell>
-                                <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild><Button aria-haspopup="true" size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /><span className="sr-only">Toggle menu</span></Button></DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem asChild><Link href={`/accounting/expenses/${expense.id}`}>View Details</Link></DropdownMenuItem>
-                                        <DropdownMenuItem asChild><Link href={`/accounting/expenses/edit/${expense.id}`}>Edit</Link></DropdownMenuItem>
-                                        <DeleteExpenseMenuItem expenseId={expense.id!} />
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
+          <ExpenseTable expenses={expenses} />
         </CardContent>
       </Card>
     </div>

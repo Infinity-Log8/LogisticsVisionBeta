@@ -191,7 +191,7 @@ export default function EditInvoicePage() {
     return notFound();
   }
 
-  const customerOptions = customers.map(c => ({ value: c.id, label: c.company }));
+  const customerOptions = customers.filter(c => c.id && c.company).map(c => ({ value: c.id as string, label: c.company as string }));
 
   return (
     <div className="flex-1 space-y-4">

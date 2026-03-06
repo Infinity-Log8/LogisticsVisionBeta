@@ -14,16 +14,16 @@ export interface FuelLog {
   createdAt?: Date;
 }
 
-export async function getFuelLogs(organizationId: string): Promise<FuelLog[]> {
+export async function getFuelLogs(organizationId?: string): Promise<FuelLog[]> {
   const db = await ensureDbConnected();
-  const snap = await db.collection('fuel_logs').where('organizationId', '==', organizationId).orderBy('date', 'desc').get();
+  const snap = await db.collection('fuel_logs').where("organizationId", "==", organizationId || "").orderBy('date', 'desc').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as FuelLog));
 }
 
 export async function getFuelLogsByVehicle(vehicleId: string, organizationId: string): Promise<FuelLog[]> {
   const db = await ensureDbConnected();
   const snap = await db.collection('fuel_logs')
-    .where('organizationId', '==', organizationId)
+    .where("organizationId", "==", organizationId || "")
     .where('vehicleId', '==', vehicleId)
     .orderBy('date', 'desc').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as FuelLog));

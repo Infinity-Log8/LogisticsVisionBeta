@@ -21,7 +21,7 @@ export interface Expense {
 }
 
 export type ExpenseData = Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>;
-export type ExpenseWithUrl = Expense & { receiptUrl?: string };
+export type ExpenseWithUrl = Expense & { receiptUrl?: string; attachmentUrl?: string };
 
 export async function getExpenses(organizationId?: string): Promise<Expense[]> {
   const db = await ensureDbConnected();
