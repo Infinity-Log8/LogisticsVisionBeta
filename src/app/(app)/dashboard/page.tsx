@@ -54,9 +54,31 @@ export default async function DashboardPage() {
   const organizationId = await getServerOrgId();
   if (!organizationId) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center text-muted-foreground">
-          <p>Loading your workspace...</p>
+      <div className="flex items-center justify-center h-full min-h-[60vh]">
+        <div className="text-center max-w-lg mx-auto px-6">
+          <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold mb-3">Welcome to Logistics Vision!</h2>
+          <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
+            Your account is set up. Create your company workspace to start managing trips, invoices, drivers, and your entire fleet operation.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a
+              href="/register"
+              className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors text-base"
+            >
+              Create Your Workspace
+            </a>
+            <a
+              href="/join"
+              className="inline-flex items-center justify-center gap-2 border border-border hover:bg-muted text-foreground font-semibold py-3 px-8 rounded-lg transition-colors text-base"
+            >
+              Join with Invite Link
+            </a>
+          </div>
         </div>
       </div>
     );
