@@ -67,7 +67,7 @@ export default async function DashboardPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
-              href="/register"
+              href="/setup-workspace"
               className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors text-base"
             >
               Create Your Workspace
