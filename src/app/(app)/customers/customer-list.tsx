@@ -55,7 +55,7 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
         {customers.map((customer) => (
           <TableRow key={customer.id}>
             <TableCell>
-              <Link href={`/customers/${customer.id}`} className="font-medium text-primary hover:underline">
+              <Link href={`/customers/${customer.id ?? ""}`} className="font-medium text-primary hover:underline">
                 {customer.name}
               </Link>
               <div className="text-sm text-muted-foreground hidden md:inline ml-2">
@@ -83,13 +83,13 @@ export function CustomerList({ customers }: { customers: Customer[] }) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuItem asChild>
-                    <Link href={`/customers/edit/${customer.id}`}>Edit</Link>
+                    <Link href={`/customers/edit/${customer.id ?? ""}`}>Edit</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href={`/customers/${customer.id}`}>View Details</Link>
+                    <Link href={`/customers/${customer.id ?? ""}`}>View Details</Link>
                   </DropdownMenuItem>
                    {customer.status === 'Active' ? (
-                    <DeactivateCustomerMenuItem customerId={customer.id} customerName={customer.company} />
+                    <DeactivateCustomerMenuItem customerId={customer.id ?? ""} customerName={customer.company} />
                    ) : (
                     <DropdownMenuItem disabled>Re-activate</DropdownMenuItem>
                    )}

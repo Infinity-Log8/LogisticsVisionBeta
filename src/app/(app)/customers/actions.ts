@@ -1,10 +1,10 @@
 
 'use server';
 
-import { createCustomer, updateCustomer, type CustomerData } from '@/services/customer-service';
+import { createCustomer, updateCustomer, type Customer } from '@/services/customer-service';
 import { revalidatePath } from 'next/cache';
 
-export async function createCustomerAction(data: CustomerData): Promise<{ success: boolean, error?: string, customerId?: string }> {
+export async function createCustomerAction(data: Omit<Customer, "id">): Promise<{ success: boolean, error?: string, customerId?: string }> {
     try {
         const newCustomer = await createCustomer(data);
         revalidatePath('/customers');
@@ -18,7 +18,7 @@ export async function createCustomerAction(data: CustomerData): Promise<{ succes
     }
 }
 
-export async function updateCustomerAction(id: string, data: CustomerData): Promise<{ success: boolean, error?: string }> {
+export async function updateCustomerAction(id: string, data: Omit<Customer, "id">): Promise<{ success: boolean, error?: string }> {
     try {
         await updateCustomer(id, data);
         revalidatePath('/customers');

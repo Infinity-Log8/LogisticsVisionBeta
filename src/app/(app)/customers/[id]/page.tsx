@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, DollarSign, FileText, Mail, MapPin, Phone, Truck, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getCustomerById } from '@/services/customer-service';
+import { getServerOrgId } from '@/lib/server-auth';
 import { notFound } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -39,7 +40,8 @@ const getInvoiceStatusVariant = (status: string) => {
 
 export default async function CustomerDetailsPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const customer = await getCustomerById(id).catch(() => null);
+  const organizationId = await getServerOrgId();
+  const customer = await getCustomerById(id, organizationId || '').catch(() => null);
 
   if (!customer) {
     notFound();
@@ -49,15 +51,15 @@ export default async function CustomerDetailsPage({ params }: { params: { id: st
   const allTrips = await getTrips().catch((e) => { console.error('Data fetch error:', e.message); return []; });
 
   const customerTrips = allTrips.filter(trip => trip.customer === customer.company);
-  const customerInvoices = allInvoices.filter(invoice => invoice.customer === customer.company);
+  const customerInvoices = allInvoices.filter(invoice => invoice.customerName === customer.company);
 
   const lifetimeValue = customerInvoices
     .filter(inv => inv.status === 'Paid')
-    .reduce((sum, inv) => sum + inv.total, 0);
+    .reduce((sum, inv) => sum + (inv.amount ?? 0), 0);
   
   const outstandingBalance = customerInvoices
     .filter(inv => inv.status === 'Unpaid' || inv.status === 'Overdue')
-    .reduce((sum, inv) => sum + inv.total, 0);
+    .reduce((sum, inv) => sum + (inv.amount ?? 0), 0);
 
   const totalTrips = customerTrips.length;
 
@@ -156,9 +158,9 @@ export default async function CustomerDetailsPage({ params }: { params: { id: st
                                  {customerInvoices.map(invoice => (
                                     <TableRow key={invoice.id}>
                                         <TableCell><Link href={`/accounting/invoices/${invoice.id}`} className="text-primary hover:underline">{invoice.id}</Link></TableCell>
-                                        <TableCell>{invoice.dueDate}</TableCell>
-                                        <TableCell><Badge variant={getInvoiceStatusVariant(invoice.status) as any}>{invoice.status}</Badge></TableCell>
-                                        <TableCell className="text-right">${invoice.total.toLocaleString()}</TableCell>
+                                        <TableCell>{invoice.dueDate ? (typeof invoice.dueDate === "string" ? invoice.dueDate : new Date(invoice.dueDate as Date).toLocaleDateString()) : ""}</TableCell>
+                                        <TableCell><Badge variant={getInvoiceStatusVariant(invoice.status as any) as any}>{invoice.status}</Badge></TableCell>
+                                        <TableCell className="text-right">${(invoice.amount ?? 0).toLocaleString()}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
