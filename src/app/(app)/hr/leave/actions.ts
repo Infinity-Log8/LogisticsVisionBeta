@@ -4,6 +4,7 @@
 import {
   createLeaveRequest,
   getLeaveRequests,
+  getPendingLeaveCount,
   updateLeaveRequestStatus,
   type LeaveRequest,
   type LeaveRequestData,
@@ -50,10 +51,9 @@ export async function updateLeaveRequestStatusAction(
 }
 
 export async function getPendingLeaveCountAction(): Promise<number> {
-    try {
-        const requests = await getLeaveRequests({ status: 'Pending' });
-        return requests.length;
-    } catch (e) {
-        return 0;
-    }
+  try {
+    return await getPendingLeaveCount();
+  } catch (e) {
+    return 0;
+  }
 }

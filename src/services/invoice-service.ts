@@ -9,6 +9,11 @@ export interface LineItem {
   quantity: number;
   unitPrice: number;
   total: number;
+
+  discount?: number;
+  account?: string;
+  taxRate?: number;
+  item?: string;
 }
 
 export interface InvoiceData {
@@ -41,6 +46,12 @@ export interface InvoiceWithUrl extends Invoice {
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
 export interface Invoice {
+  hasAttachment?: boolean;
+  attachmentUrl?: string;
+  total?: number;
+  customer?: string;
+  taxAmount?: number;
+  subtotalAmount?: number;
   invoiceNumber?: string;
   reference?: string;
   

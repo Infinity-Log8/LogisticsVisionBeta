@@ -36,3 +36,9 @@ export async function deleteLeaveRequest(id: string): Promise<void> {
   const db = await ensureDbConnected();
   await db.collection('leave_requests').doc(id).delete();
 }
+
+export async function getPendingLeaveCount(): Promise<number> {
+  const db = await ensureDbConnected();
+  const snap = await db.collection('leave_requests').where('status', '==', 'Pending').get();
+  return snap.size;
+}
