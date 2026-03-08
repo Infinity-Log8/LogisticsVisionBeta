@@ -64,6 +64,8 @@ export async function getTripById(id: string, organizationId?: string): Promise<
 }
 
 export async function getTrips(organizationId?: string, filters?: TripFilters): Promise<Trip[]> {
+  if (!organizationId) return [];
+
   let q: FirebaseFirestore.Query = db!.collection('trips').where("organizationId", "==", organizationId || "");
   if (filters?.customerId) q = q.where('customerId', '==', filters.customerId);
   if (filters?.driverId) q = q.where('driverId', '==', filters.driverId);

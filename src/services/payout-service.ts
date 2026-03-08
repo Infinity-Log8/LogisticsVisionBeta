@@ -19,6 +19,8 @@ export interface Payout {
 }
 
 export async function getPayouts(organizationId: string): Promise<Payout[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   const snap = await db.collection('payouts').where('organizationId', '==', organizationId).orderBy('createdAt', 'desc').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Payout));

@@ -17,6 +17,8 @@ export interface FuelLog {
 }
 
 export async function getFuelLogs(organizationId?: string): Promise<FuelLog[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   const snap = await db.collection('fuel_logs').where("organizationId", "==", organizationId || "").orderBy('date', 'desc').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as FuelLog));

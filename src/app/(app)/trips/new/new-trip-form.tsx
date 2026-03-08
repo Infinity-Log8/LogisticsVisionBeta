@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox } from "@/components/ui/combobox";
+import { LocationInput } from '@/components/location-input';
 import type { Customer } from "@/services/customer-service";
 import type { Employee } from "@/services/employee-service";
 import type { Vehicle } from "@/services/vehicle-service";

@@ -24,6 +24,8 @@ export type ExpenseData = Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>;
 export type ExpenseWithUrl = Expense & { receiptUrl?: string; attachmentUrl?: string };
 
 export async function getExpenses(organizationId?: string): Promise<Expense[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   const query = organizationId
     ? db.collection('expenses').where('organizationId', '==', organizationId).orderBy('date', 'desc')

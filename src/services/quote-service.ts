@@ -31,6 +31,8 @@ export type QuoteData = Omit<Quote, 'id'>;
 export type QuoteWithUrl = Quote & { attachmentUrl?: string; attachmentPath?: string };
 
 export async function getQuotes(organizationId: string): Promise<Quote[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   const snap = await db.collection('quotes').where('organizationId', '==', organizationId).orderBy('createdAt', 'desc').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Quote));

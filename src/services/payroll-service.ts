@@ -88,3 +88,6 @@ export async function finalizePayrollRun(id: string): Promise<void> {
     throw error;
   }
 }
+
+// Alias for backward compatibility
+export const getPayrollRuns = getPayrollRecords;

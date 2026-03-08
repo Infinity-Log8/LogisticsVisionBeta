@@ -16,6 +16,8 @@ export interface Customer {
 }
 
 export async function getCustomers(organizationId?: string): Promise<Customer[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   const snap = await db.collection('customers').where("organizationId", "==", organizationId || "").orderBy('name').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Customer));

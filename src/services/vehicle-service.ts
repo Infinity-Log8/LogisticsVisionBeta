@@ -23,6 +23,8 @@ export interface Vehicle {
 }
 
 export async function getVehicles(organizationId?: string): Promise<Vehicle[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   const snap = await db.collection('vehicles').where("organizationId", "==", organizationId || "").get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Vehicle));

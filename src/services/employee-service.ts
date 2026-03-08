@@ -26,6 +26,8 @@ export interface Employee {
 }
 
 export async function getEmployees(organizationId?: string): Promise<Employee[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   const snap = await db.collection('employees').where('organizationId', '==', organizationId).get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
@@ -57,6 +59,8 @@ export async function deleteEmployee(id: string): Promise<void> {
 }
 
 export async function getDrivers(organizationId?: string): Promise<Employee[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   let query: FirebaseFirestore.Query = db.collection('employees').where('role', '==', 'Driver');
   if (organizationId) query = query.where('organizationId', '==', organizationId);

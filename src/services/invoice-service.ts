@@ -70,6 +70,8 @@ export interface Invoice {
 }
 
 export async function getInvoices(organizationId?: string): Promise<Invoice[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   const query = organizationId
     ? db.collection('invoices').where('organizationId', '==', organizationId).orderBy('issueDate', 'desc')
