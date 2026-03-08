@@ -1,6 +1,6 @@
 'use server';
 
-export type InvoiceStatus = 'Paid' | 'Unpaid' | 'Overdue' | 'Draft';
+export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid' | 'paid' | 'Overdue' | 'Cancelled' | string;
 export type InvoiceTaxType = 'exclusive' | 'inclusive' | 'none';
 
 export interface LineItem {

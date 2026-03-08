@@ -46,3 +46,19 @@ export async function deleteEmployee(id: string): Promise<void> {
   const db = await ensureDbConnected();
   await db.collection('employees').doc(id).delete();
 }
+
+export async function getDrivers(organizationId?: string): Promise<Employee[]> {
+  const db = await ensureDbConnected();
+  let query: FirebaseFirestore.Query = db.collection('employees').where('role', '==', 'Driver');
+  if (organizationId) query = query.where('organizationId', '==', organizationId);
+  const snap = await query.get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
+}
+
+export async function getEmployees(organizationId?: string): Promise<Employee[]> {
+  const db = await ensureDbConnected();
+  let query: FirebaseFirestore.Query = db.collection('employees');
+  if (organizationId) query = query.where('organizationId', '==', organizationId);
+  const snap = await query.get();
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
+}

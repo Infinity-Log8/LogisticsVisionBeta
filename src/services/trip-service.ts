@@ -42,17 +42,17 @@ export type TripFilters = {
 };
 
 export async function createTrip(data: Omit<Trip, 'id'>): Promise<Trip> {
-  const ref = await db.collection('trips').add({ ...data, createdAt: Timestamp.now() });
+  const ref = await db!.collection('trips').add({ ...data, createdAt: Timestamp.now() });
   return { id: ref.id, ...data };
 }
 
 export async function updateTrip(id: string, data: Partial<Omit<Trip, 'id'>>): Promise<void> {
-  await db.collection('trips').doc(id).update(data);
+  await db!.collection('trips').doc(id).update(data);
 }
 
 export async function getTripById(id: string, organizationId?: string): Promise<Trip | null> {
   try {
-    const doc = await db.collection('trips').doc(id).get();
+    const doc = await db!.collection('trips').doc(id).get();
     if (!doc.exists) return null;
     const trip = { id: doc.id, ...doc.data() } as Trip;
     if (organizationId && trip.organizationId !== organizationId) return null;
@@ -64,7 +64,7 @@ export async function getTripById(id: string, organizationId?: string): Promise<
 }
 
 export async function getTrips(organizationId?: string, filters?: TripFilters): Promise<Trip[]> {
-  let q: FirebaseFirestore.Query = db.collection('trips').where("organizationId", "==", organizationId || "");
+  let q: FirebaseFirestore.Query = db!.collection('trips').where("organizationId", "==", organizationId || "");
   if (filters?.customerId) q = q.where('customerId', '==', filters.customerId);
   if (filters?.driverId) q = q.where('driverId', '==', filters.driverId);
   if (filters?.status) q = q.where('status', '==', filters.status);
@@ -81,5 +81,5 @@ export async function getTrips(organizationId?: string, filters?: TripFilters): 
 }
 
 export async function deleteTrip(id: string): Promise<void> {
-  await db.collection('trips').doc(id).delete();
+  await db!.collection('trips').doc(id).delete();
 }

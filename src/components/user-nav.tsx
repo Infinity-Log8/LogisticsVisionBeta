@@ -15,7 +15,7 @@ import { CreditCard, LogOut, Settings, User } from 'lucide-react';
 import Link from 'next/link';
 
 export function UserNav() {
-  const { user, signOut, loading } = useAuth();
+  const { user, logOut, loading } = useAuth();
 
   if (loading) {
     return null;
@@ -74,7 +74,7 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut}>
+        <DropdownMenuItem onClick={logOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>

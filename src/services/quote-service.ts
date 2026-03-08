@@ -13,7 +13,15 @@ export interface Quote {
   notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  subtotal?: number;
+  totalTax?: number;
+  taxType?: string;
+  attachmentUrl?: string;
+  attachmentPath?: string;
 }
+
+export type QuoteData = Omit<Quote, 'id'>;
+export type QuoteWithUrl = Quote & { attachmentUrl?: string; attachmentPath?: string };
 
 export async function getQuotes(organizationId: string): Promise<Quote[]> {
   const db = await ensureDbConnected();

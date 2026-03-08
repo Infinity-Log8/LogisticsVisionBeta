@@ -373,7 +373,7 @@ async function main() {
     const adminUid = userRecord.uid;
     await auth.setCustomUserClaims(adminUid, { admin: true });
     console.log('✅ Set custom admin claims.');
-    const userRef = db.collection('users').doc(adminUid);
+    const userRef = db!.collection('users').doc(adminUid);
     await userRef.set(
       {
         uid: adminUid,
@@ -392,7 +392,7 @@ async function main() {
     // Customers
     console.log('\n--- Section 2: Customer Data Seeding ---');
     mockCustomers.forEach((customer) => {
-        batch.set(db.collection('customers').doc(customer.id), customer);
+        batch.set(db!.collection('customers').doc(customer.id), customer);
     });
     console.log(`✅ Queued ${mockCustomers.length} customers for seeding.`);
 
@@ -405,49 +405,49 @@ async function main() {
           photoUrl: `https://i.pravatar.cc/150?u=${employee.id}`,
           totalTrips: Math.floor(Math.random() * 25),
         };
-        batch.set(db.collection('employees').doc(employee.id), employeeData);
+        batch.set(db!.collection('employees').doc(employee.id), employeeData);
     });
     console.log(`✅ Queued ${mockEmployees.length} employees for seeding.`);
 
     // Vehicles
     console.log('\n--- Section 4: Vehicle Data Seeding ---');
     mockVehicles.forEach((vehicle) => {
-        batch.set(db.collection('vehicles').doc(vehicle.id), vehicle);
+        batch.set(db!.collection('vehicles').doc(vehicle.id), vehicle);
     });
     console.log(`✅ Queued ${mockVehicles.length} vehicles for seeding.`);
 
     // Expenses
     console.log('\n--- Section 5: Expense Data Seeding ---');
     mockExpenses.forEach((expense) => {
-        batch.set(db.collection('expenses').doc(expense.id), expense);
+        batch.set(db!.collection('expenses').doc(expense.id), expense);
     });
     console.log(`✅ Queued ${mockExpenses.length} expenses for seeding.`);
 
     // Invoices
     console.log('\n--- Section 6: Invoice Data Seeding ---');
     mockInvoices.forEach((invoice) => {
-        batch.set(db.collection('invoices').doc(invoice.id), invoice);
+        batch.set(db!.collection('invoices').doc(invoice.id), invoice);
     });
     console.log(`✅ Queued ${mockInvoices.length} invoices for seeding.`);
 
     // Trips
     console.log('\n--- Section 7: Trip Data Seeding ---');
     mockTrips.forEach((trip) => {
-        batch.set(db.collection('trips').doc(trip.id), trip);
+        batch.set(db!.collection('trips').doc(trip.id), trip);
     });
     console.log(`✅ Queued ${mockTrips.length} trips for seeding.`);
 
     // Quotes
     console.log('\n--- Section 8: Quote Data Seeding ---');
     mockQuotes.forEach((quote) => {
-        batch.set(db.collection('quotes').doc(quote.id), quote);
+        batch.set(db!.collection('quotes').doc(quote.id), quote);
     });
     console.log(`✅ Queued ${mockQuotes.length} quotes for seeding.`);
 
     // Leave Requests
     console.log('\n--- Section 9: Leave Request Data Seeding ---');
     mockLeaveRequests.forEach((req) => {
-        const docRef = db.collection('leaveRequests').doc();
+        const docRef = db!.collection('leaveRequests').doc();
         batch.set(docRef, { id: docRef.id, ...req });
     });
     console.log(`✅ Queued ${mockLeaveRequests.length} leave requests for seeding.`);
@@ -455,7 +455,7 @@ async function main() {
     // Fuel Logs
     console.log('\n--- Section 10: Fuel Log Data Seeding ---');
     mockFuelLogs.forEach((log) => {
-        const docRef = db.collection('fuelLogs').doc();
+        const docRef = db!.collection('fuelLogs').doc();
         batch.set(docRef, { id: docRef.id, ...log });
     });
     console.log(`✅ Queued ${mockFuelLogs.length} fuel logs for seeding.`);
@@ -463,25 +463,25 @@ async function main() {
     // Payroll Runs
     console.log('\n--- Section 11: Payroll Run Data Seeding ---');
     mockPayrollRuns.forEach((run) => {
-        batch.set(db.collection('payrollRuns').doc(run.id), run);
+        batch.set(db!.collection('payrollRuns').doc(run.id), run);
     });
     console.log(`✅ Queued ${mockPayrollRuns.length} payroll runs for seeding.`);
 
     // Commissions & Payouts
     console.log('\n--- Section 12: Commissions & Payouts Data Seeding ---');
     mockCommissionsToSeed.forEach((commission) => {
-        batch.set(db.collection('commissions').doc(commission.id), commission);
+        batch.set(db!.collection('commissions').doc(commission.id), commission);
     });
     console.log(`✅ Queued ${mockCommissionsToSeed.length} commissions for seeding.`);
 
     mockPayoutsToSeed.forEach((payout) => {
-        batch.set(db.collection('payouts').doc(payout.id), payout);
+        batch.set(db!.collection('payouts').doc(payout.id), payout);
     });
     console.log(`✅ Queued ${mockPayoutsToSeed.length} payouts for seeding.`);
 
     // Settings
     console.log('\n--- Section 13: Settings Data Seeding ---');
-    batch.set(db.collection('settings').doc(defaultSettings.id), defaultSettings, { merge: true });
+    batch.set(db!.collection('settings').doc(defaultSettings.id), defaultSettings, { merge: true });
     console.log(`✅ Queued default settings for seeding.`);
 
     // Commit all changes

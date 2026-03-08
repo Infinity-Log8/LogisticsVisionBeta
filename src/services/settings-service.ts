@@ -1,6 +1,9 @@
 'use server';
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
+export type AppSettings = OrgSettings;
+export interface TaxRate { id: string; name: string; rate: number; };
+export type AppSettings = OrgSettings;
 export interface OrgSettings {
   id?: string;
   organizationId: string;
