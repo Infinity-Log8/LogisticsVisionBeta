@@ -16,7 +16,7 @@ export interface PayrollRecord {
   createdAt?: Date;
 }
 
-export async function getPayrollRecords(organizationId: string): Promise<PayrollRecord[]> {
+export async function getPayrollRecords(organizationId?: string): Promise<PayrollRecord[]> {
   const db = await ensureDbConnected();
   const snap = await db.collection('payroll').where('organizationId', '==', organizationId).orderBy('createdAt', 'desc').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as PayrollRecord));

@@ -18,7 +18,7 @@ export interface Commission {
   paidAt?: Date;
 }
 
-export async function getCommissions(organizationId: string): Promise<Commission[]> {
+export async function getCommissions(organizationId?: string): Promise<Commission[]> {
   const db = await ensureDbConnected();
   const snap = await db.collection('commissions').where('organizationId', '==', organizationId).orderBy('createdAt', 'desc').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Commission));

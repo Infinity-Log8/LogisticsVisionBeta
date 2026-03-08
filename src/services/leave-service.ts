@@ -15,13 +15,13 @@ export interface LeaveRequest {
   updatedAt?: Date;
 }
 
-export async function getLeaveRequests(organizationId: string): Promise<LeaveRequest[]> {
+export async function getLeaveRequests(organizationId?: string): Promise<LeaveRequest[]> {
   const db = await ensureDbConnected();
   const snap = await db.collection('leave_requests').where('organizationId', '==', organizationId).orderBy('startDate', 'desc').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as LeaveRequest));
 }
 
-export async function createLeaveRequest(data: Omit<LeaveRequest, 'id'>): Promise<LeaveRequest> {
+export async function createLeaveRequest(data: Partial<LeaveRequest> | Omit<LeaveRequest, 'id'>): Promise<LeaveRequest> {
   const db = await ensureDbConnected();
   const ref = await db.collection('leave_requests').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
   return { id: ref.id, ...data };
@@ -41,4 +41,12 @@ export async function getPendingLeaveCount(): Promise<number> {
   const db = await ensureDbConnected();
   const snap = await db.collection('leave_requests').where('status', '==', 'Pending').get();
   return snap.size;
+}
+
+// LeaveRequestData is an alias for LeaveRequest data shape without id
+export type LeaveRequestData = Omit<LeaveRequest, "id">;
+
+export async function updateLeaveRequestStatus(id: string, status: string): Promise<void> {
+  const db = await ensureDbConnected();
+  await db.collection('leaveRequests').doc(id).update({ status, updatedAt: new Date() });
 }

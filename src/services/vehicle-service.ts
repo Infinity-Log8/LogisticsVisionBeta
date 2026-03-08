@@ -52,3 +52,6 @@ export async function deleteVehicle(id: string): Promise<void> {
   const db = await ensureDbConnected();
   await db.collection('vehicles').doc(id).delete();
 }
+
+// VehicleData is an alias for Vehicle data shape without id
+export type VehicleData = Omit<Vehicle, "id">;
