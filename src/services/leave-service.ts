@@ -16,6 +16,8 @@ export interface LeaveRequest {
 }
 
 export async function getLeaveRequests(organizationId?: string): Promise<LeaveRequest[]> {
+  if (!organizationId) return [];
+
   const db = await ensureDbConnected();
   const snap = await db.collection('leave_requests').where('organizationId', '==', organizationId).orderBy('startDate', 'desc').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as LeaveRequest));
