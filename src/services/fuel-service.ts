@@ -12,6 +12,8 @@ export interface FuelLog {
   odometer?: number;
   station?: string;
   createdAt?: Date;
+  kmDriven?: number;
+  notes?: string;
 }
 
 export async function getFuelLogs(organizationId?: string): Promise<FuelLog[]> {

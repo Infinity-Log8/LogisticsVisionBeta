@@ -36,9 +36,9 @@ export async function getPnlDataAction(
 ): Promise<PnlData | { error: string }> {
     try {
         const [invoiceData, expenseData, tripData] = await Promise.all([
-            getInvoices({ startDate, endDate }),
-            getExpenses({ startDate, endDate }),
-            getTrips({ startDate, endDate })
+            getInvoices(""),
+            getExpenses(""),
+            getTrips("")
         ]);
         return {
             invoices: invoiceData,

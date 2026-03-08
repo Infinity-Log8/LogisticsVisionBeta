@@ -32,3 +32,25 @@ export async function updatePayrollRecord(id: string, data: Partial<PayrollRecor
   const db = await ensureDbConnected();
   await db.collection('payroll').doc(id).update(data);
 }
+
+// PayrollRun is an alias for PayrollRecord (for compatibility with payroll run views)
+export type PayrollRun = PayrollRecord & {
+  runDate?: Date;
+  totalNetPay?: number;
+  totalGrossPay?: number;
+  totalDeductions?: number;
+  employeeCount?: number;
+  notes?: string;
+};
+
+export async function getPayrollRunById(id: string, organizationId?: string): Promise<PayrollRun | null> {
+  const db = await ensureDbConnected();
+  try {
+    const doc = await db.collection('payroll').doc(id).get();
+    if (!doc.exists) return null;
+    return { id: doc.id, ...doc.data() } as PayrollRun;
+  } catch (error) {
+    console.error('Error fetching payroll run:', error);
+    return null;
+  }
+}

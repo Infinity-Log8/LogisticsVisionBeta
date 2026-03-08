@@ -15,6 +15,11 @@ export interface Vehicle {
   lastService?: Date;
   createdAt?: Date;
   updatedAt?: Date;
+  driverId?: string;
+  driverName?: string;
+  maintenanceDue?: string | Date;
+  fuelEfficiency?: number;
+  notes?: string;
 }
 
 export async function getVehicles(organizationId?: string): Promise<Vehicle[]> {
@@ -23,7 +28,7 @@ export async function getVehicles(organizationId?: string): Promise<Vehicle[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Vehicle));
 }
 
-export async function getVehicleById(id: string, organizationId: string): Promise<Vehicle | null> {
+export async function getVehicleById(id: string, organizationId?: string): Promise<Vehicle | null> {
   const db = await ensureDbConnected();
   const doc = await db.collection('vehicles').doc(id).get();
   if (!doc.exists) return null;

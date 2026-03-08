@@ -72,9 +72,9 @@ export async function listAllAttachments(): Promise<AttachmentFile[]> {
         
         const attachmentFiles = await Promise.all(
             files
-                .filter((file: StorageReference) => !file.name.endsWith('/')) // Ignore folders
+                .filter((file: any) => !file.name.endsWith('/')) // Ignore folders
                 .filter(file => file.name.startsWith('invoices/') || file.name.startsWith('expenses/') || file.name.startsWith('quotes/') || file.name.startsWith('documents/'))
-                .map(async (file: StorageReference) => {
+                .map(async (file: any) => {
                     const [metadata] = await file.getMetadata();
                     const [url] = await file.getSignedUrl({
                         action: 'read',

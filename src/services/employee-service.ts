@@ -14,6 +14,15 @@ export interface Employee {
   salary?: number;
   createdAt?: Date;
   updatedAt?: Date;
+  photoUrl?: string;
+  license?: string;
+  licenseExpiry?: string;
+  totalTrips?: number;
+  address?: string;
+  emergencyContact?: string;
+  bankAccount?: string;
+  taxNumber?: string;
+  baseSalary?: number;
 }
 
 export async function getEmployees(organizationId: string): Promise<Employee[]> {
@@ -55,10 +64,3 @@ export async function getDrivers(organizationId?: string): Promise<Employee[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
 }
 
-export async function getEmployees(organizationId?: string): Promise<Employee[]> {
-  const db = await ensureDbConnected();
-  let query: FirebaseFirestore.Query = db.collection('employees');
-  if (organizationId) query = query.where('organizationId', '==', organizationId);
-  const snap = await query.get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
-}

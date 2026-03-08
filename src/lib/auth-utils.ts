@@ -6,7 +6,7 @@ import { headers } from 'next/headers';
 import type { Auth } from 'firebase-admin/auth';
 
 async function getAuthenticatedUser(auth: Auth) {
-    const idToken = headers().get('Authorization')?.split('Bearer ')[1];
+    const idToken = (await headers()).get('Authorization')?.split('Bearer ')[1];
     if (!idToken) {
         throw new Error('User not authenticated.');
     }

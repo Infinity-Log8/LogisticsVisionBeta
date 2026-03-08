@@ -11,6 +11,11 @@ export interface Payout {
   status?: string;
   paidAt?: Date;
   createdAt?: Date;
+  totalAmount?: number;
+  payoutDate?: Date | string;
+  commissionsCount?: number;
+  commissionIds?: string[];
+  notes?: string;
 }
 
 export async function getPayouts(organizationId: string): Promise<Payout[]> {

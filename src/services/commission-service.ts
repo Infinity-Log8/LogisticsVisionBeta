@@ -12,6 +12,10 @@ export interface Commission {
   period?: string;
   status?: string;
   createdAt?: Date;
+  broker?: string;
+  tripReference?: string;
+  description?: string;
+  paidAt?: Date;
 }
 
 export async function getCommissions(organizationId: string): Promise<Commission[]> {
@@ -30,3 +34,10 @@ export async function updateCommission(id: string, data: Partial<Commission>): P
   const db = await ensureDbConnected();
   await db.collection('commissions').doc(id).update(data);
 }
+
+// Extended commission type with computed amount fields
+export type CommissionWithAmount = Commission & {
+  computedAmount?: number;
+  broker?: string;
+  tripDetails?: { id: string; tripId: string; }[];
+};

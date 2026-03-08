@@ -77,7 +77,7 @@ const getInvoicesTool = ai.defineTool(
   },
   async ({ customerId, startDate, endDate }) => {
     // Revenue is based on PAID invoices.
-    const invoices = await getInvoices({ customerId, startDate, endDate });
+    const invoices = await getInvoices(customerId || "");
     return invoices.filter(inv => inv.status === 'Paid');
   }
 );
@@ -91,7 +91,7 @@ const getTripsTool = ai.defineTool(
     }),
     outputSchema: z.array(TripSchema),
   },
-  async ({ customerId }) => getTrips({ customerId })
+  async ({ customerId }) => getTrips(customerId || "")
 );
 
 const getExpensesTool = ai.defineTool(
@@ -103,7 +103,7 @@ const getExpensesTool = ai.defineTool(
     }),
     outputSchema: z.array(ExpenseSchema),
   },
-  async ({ tripId }) => { const all = await getExpenses(); return tripId ? all.filter(e => e.tripId === tripId) : all; }
+  async ({ tripId }) => getExpenses(tripId || "")
 );
 
 export async function getFinancialAnalysis(input: FinancialAnalystInput): Promise<FinancialAnalystOutput> {
@@ -149,7 +149,7 @@ const financialAnalystFlow = ai.defineFlow(
     inputSchema: FinancialAnalystInputSchema,
     outputSchema: FinancialAnalystOutputSchema,
   },
-  async (input:any) => {
+  async (input: any): Promise<any> => {
     const llmResponse = await prompt(input);
 
     return { analysis: llmResponse.text };

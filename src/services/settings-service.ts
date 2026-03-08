@@ -2,8 +2,6 @@
 import { ensureDbConnected } from '@/lib/firebase-admin';
 
 export type AppSettings = OrgSettings;
-export interface TaxRate { id: string; name: string; rate: number; };
-export type AppSettings = OrgSettings;
 export interface OrgSettings {
   id?: string;
   organizationId: string;
@@ -15,6 +13,19 @@ export interface OrgSettings {
   currency?: string;
   timezone?: string;
   updatedAt?: Date;
+  // Business settings
+  taxId?: string;
+  defaultPaymentTerms?: number;
+  invoiceFooter?: string;
+  // Rate settings
+  loadRatePerKm?: number;
+  fuelPricePerLitre?: number;
+  driverOTRateLow?: number;
+  driverOTRateHigh?: number;
+  fuelEfficiencyLPer100Km?: number;
+  brokerCommissionRate?: number;
+  // Tax rates
+  taxRates?: TaxRate[];
 }
 
 export async function getSettings(organizationId: string): Promise<OrgSettings | null> {

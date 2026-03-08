@@ -18,6 +18,11 @@ export interface Quote {
   taxType?: string;
   attachmentUrl?: string;
   attachmentPath?: string;
+  dateIssued?: string;
+  expiryDate?: string;
+  lineItems?: any[];
+  total?: number;
+  customer?: string; // alias for customerId display
 }
 
 export type QuoteData = Omit<Quote, 'id'>;
