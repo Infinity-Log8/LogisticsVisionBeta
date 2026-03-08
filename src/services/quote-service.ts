@@ -23,6 +23,8 @@ export interface Quote {
   lineItems?: any[];
   total?: number;
   customer?: string; // alias for customerId display
+  reference?: string;
+  hasAttachment?: boolean;
 }
 
 export type QuoteData = Omit<Quote, 'id'>;

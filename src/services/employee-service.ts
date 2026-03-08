@@ -25,7 +25,7 @@ export interface Employee {
   baseSalary?: number;
 }
 
-export async function getEmployees(organizationId: string): Promise<Employee[]> {
+export async function getEmployees(organizationId?: string): Promise<Employee[]> {
   const db = await ensureDbConnected();
   const snap = await db.collection('employees').where('organizationId', '==', organizationId).get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));

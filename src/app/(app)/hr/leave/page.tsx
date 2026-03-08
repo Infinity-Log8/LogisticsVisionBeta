@@ -59,7 +59,7 @@ export default function LeavePage() {
         const rejected = requests.filter(r => r.status === 'Rejected');
         
         const approvedThisMonthCount = approved.filter(r => 
-            isWithinInterval(new Date(r.startDate), { start: startOfThisMonth, end: endOfThisMonth })
+            r.startDate && isWithinInterval(new Date(r.startDate), { start: startOfThisMonth, end: endOfThisMonth })
         ).length;
 
         return {

@@ -54,3 +54,37 @@ export async function getPayrollRunById(id: string, organizationId?: string): Pr
     return null;
   }
 }
+
+// PayrollRunData is an alias for creating/updating a PayrollRun
+export type PayrollRunData = Omit<PayrollRun, 'id'>;
+
+export async function createPayrollRun(data: Omit<PayrollRun, 'id'>): Promise<PayrollRun> {
+  const db = await ensureDbConnected();
+  try {
+    const ref = await db.collection('payroll').add({ ...data, createdAt: new Date() });
+    return { id: ref.id, ...data };
+  } catch (error) {
+    console.error('Error creating payroll run:', error);
+    throw error;
+  }
+}
+
+export async function updatePayrollRun(id: string, data: Partial<PayrollRun>): Promise<void> {
+  const db = await ensureDbConnected();
+  try {
+    await db.collection('payroll').doc(id).update({ ...data, updatedAt: new Date() });
+  } catch (error) {
+    console.error('Error updating payroll run:', error);
+    throw error;
+  }
+}
+
+export async function finalizePayrollRun(id: string): Promise<void> {
+  const db = await ensureDbConnected();
+  try {
+    await db.collection('payroll').doc(id).update({ status: 'finalized', finalizedAt: new Date() });
+  } catch (error) {
+    console.error('Error finalizing payroll run:', error);
+    throw error;
+  }
+}
