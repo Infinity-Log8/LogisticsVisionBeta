@@ -33,7 +33,7 @@ export default function SetupWorkspacePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.uid,
-          email: user.email,
+          email: user.email || '',
           companyName: companyName.trim(),
         }),
       });

@@ -6,7 +6,8 @@ import { ensureDbConnected } from '@/lib/firebase-admin';
 export async function POST(req: NextRequest) {
   try {
     const { userId, email, companyName, inviteToken } = await req.json();
-    if (!userId || !email) return NextResponse.json({ error: 'Missing userId or email' }, { status: 400 });
+    if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    const safeEmail = (email || '').trim();
 
     const db = await ensureDbConnected();
 
@@ -20,13 +21,13 @@ export async function POST(req: NextRequest) {
       // Join existing org via invite
       const invite = await getInviteByToken(inviteToken);
       if (!invite) return NextResponse.json({ error: 'Invalid or expired invite' }, { status: 400 });
-      if (invite.email !== email) return NextResponse.json({ error: 'Email does not match invite' }, { status: 400 });
+      if (invite.email && safeEmail && invite.email !== safeEmail) return NextResponse.json({ error: 'Email does not match invite' }, { status: 400 });
 
       // Link user to org
       await db.collection('users').doc(userId).set({
         organizationId: invite.organizationId,
         role: invite.role || 'Member',
-        email,
+        email: safeEmail,
       }, { merge: true });
 
       // Mark invite as accepted
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
     } else {
       // Create new org
       if (!companyName) return NextResponse.json({ error: 'Company name is required' }, { status: 400 });
-      const org = await createOrganization(companyName, userId, email);
+      const org = await createOrganization(companyName, userId, safeEmail);
       return NextResponse.json({ organizationId: org.id, organizationName: org.name });
     }
   } catch (e: any) {
