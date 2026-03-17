@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { getSettingsAction, updateSettingsAction } from './actions';
+import { getSettingsAction, upsertSettingsAction } from './actions';
 import type { TaxRate, AppSettings } from '@/services/settings-service';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -93,7 +93,7 @@ export default function AdminSettingsPage() {
         taxRates,
     };
 
-    const result = await updateSettingsAction(settingsData);
+    const result = await upsertSettingsAction(settingsData);
     
     if (result.success) {
         toast({

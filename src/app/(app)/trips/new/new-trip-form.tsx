@@ -84,6 +84,7 @@ export function NewTripForm({ customers, drivers, vehicles }: Props) {
     const vehicle  = vehicles.find(v => v.id === data.vehicleId);
     const result = await createTripAction({
       ...data,
+      organizationId: customer!.organizationId!,
       customer: customer?.name || "Unknown",
       driver:   driver?.name   || "Unknown",
       truck:    vehicle?.licensePlate || "Unknown",
@@ -104,9 +105,9 @@ export function NewTripForm({ customers, drivers, vehicles }: Props) {
     }
   }
 
-  const custOpts = customers.map(c => ({ value:c.id, label:c.name }));
-  const drvOpts  = drivers.map(d => ({ value:d.id, label:d.name }));
-  const vehOpts  = vehicles.map(v => ({ value:v.id, label:`${v.model} (${v.licensePlate})` }));
+  const custOpts = customers.filter(c => c.id).map(c => ({ value: c.id!, label: c.name || "" }));
+  const drvOpts  = drivers.filter(d => d.id).map(d => ({ value: d.id!, label: d.name || "" }));
+  const vehOpts  = vehicles.filter(v => v.id).map(v => ({ value: v.id!, label: `${v.model} (${v.licensePlate})` }));
 
   return (
     <Form {...form}>

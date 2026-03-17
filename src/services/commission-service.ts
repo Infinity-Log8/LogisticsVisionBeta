@@ -43,3 +43,13 @@ export type CommissionWithAmount = Commission & {
   broker?: string;
   tripDetails?: { id: string; tripId: string; }[];
 };
+
+export async function updateCommissionsStatus(commissionIds: string[], payoutId: string, payoutDate: string): Promise<void> {
+  const db = await ensureDbConnected();
+  const batch = db.batch();
+  for (const id of commissionIds) {
+    const ref = db.collection('commissions').doc(id);
+    batch.update(ref, { status: 'paid', payoutId, payoutDate });
+  }
+  await batch.commit();
+}

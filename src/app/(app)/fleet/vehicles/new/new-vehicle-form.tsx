@@ -17,12 +17,13 @@ import type { Employee } from '@/services/employee-service';
 import { Combobox } from '@/components/ui/combobox';
 
 const vehicleFormSchema = z.object({
+  make: z.string().optional(),
   model: z.string().min(1, 'Model is required'),
   year: z.coerce.number().min(1980, 'Enter a valid year').max(new Date().getFullYear() + 1, 'Year cannot be in the future'),
   licensePlate: z.string().min(1, 'License plate is required'),
-  vin: z.string().min(1, 'VIN is required'),
+  vin: z.string().optional(),
   status: z.enum(['Operational', 'In Repair', 'Awaiting Inspection']),
-  maintenanceDue: z.string().min(1, 'Next maintenance date is required'),
+  maintenanceDue: z.string().optional(),
   driverId: z.string().optional(),
 });
 
@@ -36,6 +37,7 @@ export function NewVehicleForm({ drivers }: { drivers: Employee[] }) {
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleFormSchema),
     defaultValues: {
+      make: '',
       model: '',
       licensePlate: '',
       vin: '',
@@ -87,6 +89,19 @@ export function NewVehicleForm({ drivers }: { drivers: Employee[] }) {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="make"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Vehicle Name / Type</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Truck Tauliner Superlink" {...field} disabled={loading} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., Freightliner Cascadia" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="year" render={({ field }) => (<FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" placeholder="e.g., 2022" {...field} disabled={loading} /></FormControl><FormMessage /></FormItem>)} />
               </div>

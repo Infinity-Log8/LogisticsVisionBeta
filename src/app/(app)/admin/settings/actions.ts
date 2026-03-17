@@ -1,7 +1,7 @@
 
 'use server';
 
-import { getSettings, updateSettings, type AppSettings } from '@/services/settings-service';
+import { getSettings, upsertSettings, type AppSettings } from '@/services/settings-service';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-utils';
 
@@ -10,13 +10,13 @@ export async function getSettingsAction(): Promise<AppSettings> {
     return getSettings();
 }
 
-export async function updateSettingsAction(
+export async function upsertSettingsAction(
   settingsData: Partial<Omit<AppSettings, 'id'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Writing settings should be an admin-only operation.
     await requireAdmin();
-    await updateSettings(settingsData);
+    await upsertSettings(settingsData);
     
     // Revalidate paths that depend on these settings to ensure they get fresh data.
     revalidatePath('/admin/settings', 'page');
