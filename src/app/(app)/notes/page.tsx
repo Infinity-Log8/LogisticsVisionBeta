@@ -33,10 +33,15 @@ export default function NotesPage() {
   async function handleAdd() {
     if (!title.trim() || !content.trim()) { toast({ variant:'destructive', title:'Required', description:'Title and content are required.' }); return; }
     setSaving(true);
-    const res = await createNoteAction({ title, content, category });
-    setSaving(false);
-    if (res.success) { setTitle(''); setContent(''); setCategory(''); loadNotes(); toast({ title:'Note saved' }); }
-    else toast({ variant:'destructive', title:'Error', description: res.error });
+    try {
+      const res = await createNoteAction({ title, content, category });
+      if (res.success) { setTitle(''); setContent(''); setCategory(''); loadNotes(); toast({ title:'Note saved' }); }
+      else toast({ variant:'destructive', title:'Error', description: res.error });
+    } catch (e: any) {
+      toast({ variant:'destructive', title:'Error', description: e.message || 'Failed to save note.' });
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDelete(id: string) {
