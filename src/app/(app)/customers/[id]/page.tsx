@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getInvoices } from '@/services/invoice-service';
 import { getTrips } from '@/services/trip-service';
 
-const getStatusVariant = (status: string) => {
+const getStatusVariant = (status: string | undefined) => {
   return status === 'Active' ? 'secondary' : 'outline';
 };
 
