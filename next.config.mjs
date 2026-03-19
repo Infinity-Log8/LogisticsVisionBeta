@@ -7,6 +7,15 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  serverExternalPackages: [
+    'firebase-admin',
+    'firebase-admin/auth',
+    'firebase-admin/firestore',
+    'firebase-admin/storage',
+    'firebase-admin/app',
+    '@google-cloud/firestore',
+    'dotenv',
+  ],
   images: {
     remotePatterns: [
       {
@@ -20,7 +29,7 @@ const nextConfig = {
         hostname: 'i.pravatar.cc',
         port: '',
         pathname: '/**',
-      }
+      },
     ],
   },
   webpack: (config) => {

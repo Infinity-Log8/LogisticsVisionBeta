@@ -12,7 +12,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "export": "next export"
+    "export": "next export",
+    "test:e2e": "playwright test --config=playwright.config.ts",
+    "test:e2e:ui": "playwright test --config=playwright.config.ts --reporter=list"
   },
   "dependencies": {
     "@genkit-ai/firebase": "^1.17.1",
@@ -65,6 +67,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.4",
+    "@playwright/test": "^1.58.2",
     "@types/node": "^20",
     "@types/papaparse": "^5.3.14",
     "@types/react": "18.3.28",
