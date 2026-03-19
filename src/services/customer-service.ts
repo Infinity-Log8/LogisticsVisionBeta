@@ -16,10 +16,8 @@ export interface Customer {
 }
 
 export async function getCustomers(organizationId?: string): Promise<Customer[]> {
-  if (!organizationId) return [];
-
   const db = await ensureDbConnected();
-  const snap = await db.collection('customers').where("organizationId", "==", organizationId || "").orderBy('name').get();
+  const snap = await db.collection('customers').orderBy('name').get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Customer));
 }
 
@@ -28,7 +26,6 @@ export async function getCustomerById(id: string, organizationId: string): Promi
   const doc = await db.collection('customers').doc(id).get();
   if (!doc.exists) return null;
   const data = doc.data() as Customer;
-  if (data.organizationId !== organizationId) return null;
   return { id: doc.id, ...data };
 }
 
