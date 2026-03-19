@@ -24,6 +24,7 @@ export default function NewCustomerPage() {
     address: '',
     status: 'Active' as 'Active' | 'Inactive',
     notes: '',
+    organizationId: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
