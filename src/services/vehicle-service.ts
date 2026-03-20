@@ -63,8 +63,16 @@ export async function getVehicleById(id: string, organizationId?: string): Promi
 
 export async function createVehicle(data: Omit<Vehicle, 'id'>): Promise<Vehicle> {
   const db = await ensureDbConnected();
-  const ref = await db.collection('vehicles').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
-  return { id: ref.id, ...data };
+  // Generate sequential VEH-00001 style ID
+  const snap = await db.collection('vehicles').get();
+  let maxNum = 0;
+  snap.docs.forEach(d => {
+    const match = d.id.match(/^VEH-(\d+)$/);
+    if (match) maxNum = Math.max(maxNum, parseInt(match[1]));
+  });
+  const newId = 'VEH-' + String(maxNum + 1).padStart(5, '0');
+  await db.collection('vehicles').doc(newId).set({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  return { id: newId, ...data };
 }
 
 export async function updateVehicle(id: string, data: Partial<Vehicle>): Promise<void> {
