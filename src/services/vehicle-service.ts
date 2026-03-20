@@ -22,21 +22,43 @@ export interface Vehicle {
   notes?: string;
 }
 
-export async function getVehicles(organizationId?: string): Promise<Vehicle[]> {
-  if (!organizationId) return [];
+export type VehicleData = Omit<Vehicle, 'id'>;
 
+function toPlain(val) {
+  if (!val) return null;
+  if (typeof val.toDate === 'function') return val.toDate();
+  return val;
+}
+
+export async function getVehicles(organizationId?: string): Promise<Vehicle[]> {
   const db = await ensureDbConnected();
-  const snap = await db.collection('vehicles').where("organizationId", "==", organizationId || "").get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Vehicle));
+  const snap = await db.collection('vehicles').get();
+  return snap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      ...data,
+      lastService: toPlain(data.lastService),
+      createdAt: toPlain(data.createdAt),
+      updatedAt: toPlain(data.updatedAt),
+      maintenanceDue: toPlain(data.maintenanceDue),
+    } as Vehicle;
+  });
 }
 
 export async function getVehicleById(id: string, organizationId?: string): Promise<Vehicle | null> {
   const db = await ensureDbConnected();
   const doc = await db.collection('vehicles').doc(id).get();
   if (!doc.exists) return null;
-  const data = doc.data() as Vehicle;
-  if (data.organizationId !== organizationId) return null;
-  return { id: doc.id, ...data };
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    lastService: toPlain(data.lastService),
+    createdAt: toPlain(data.createdAt),
+    updatedAt: toPlain(data.updatedAt),
+    maintenanceDue: toPlain(data.maintenanceDue),
+  } as Vehicle;
 }
 
 export async function createVehicle(data: Omit<Vehicle, 'id'>): Promise<Vehicle> {
@@ -54,6 +76,3 @@ export async function deleteVehicle(id: string): Promise<void> {
   const db = await ensureDbConnected();
   await db.collection('vehicles').doc(id).delete();
 }
-
-// VehicleData is an alias for Vehicle data shape without id
-export type VehicleData = Omit<Vehicle, "id">;
