@@ -25,21 +25,39 @@ export interface Employee {
   baseSalary?: number;
 }
 
-export async function getEmployees(organizationId?: string): Promise<Employee[]> {
-  if (!organizationId) return [];
+function toPlain(val) {
+  if (!val) return null;
+  if (typeof val.toDate === 'function') return val.toDate();
+  return val;
+}
 
+export async function getEmployees(organizationId?: string): Promise<Employee[]> {
   const db = await ensureDbConnected();
-  const snap = await db.collection('employees').where('organizationId', '==', organizationId).get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
+  const snap = await db.collection('employees').get();
+  return snap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      ...data,
+      startDate: toPlain(data.startDate),
+      createdAt: toPlain(data.createdAt),
+      updatedAt: toPlain(data.updatedAt),
+    } as Employee;
+  });
 }
 
 export async function getEmployeeById(id: string, organizationId: string): Promise<Employee | null> {
   const db = await ensureDbConnected();
   const doc = await db.collection('employees').doc(id).get();
   if (!doc.exists) return null;
-  const data = doc.data() as Employee;
-  if (data.organizationId !== organizationId) return null;
-  return { id: doc.id, ...data };
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    startDate: toPlain(data.startDate),
+    createdAt: toPlain(data.createdAt),
+    updatedAt: toPlain(data.updatedAt),
+  } as Employee;
 }
 
 export async function createEmployee(data: Omit<Employee, 'id'>): Promise<Employee> {
@@ -59,12 +77,17 @@ export async function deleteEmployee(id: string): Promise<void> {
 }
 
 export async function getDrivers(organizationId?: string): Promise<Employee[]> {
-  if (!organizationId) return [];
-
   const db = await ensureDbConnected();
-  let query: FirebaseFirestore.Query = db.collection('employees').where('role', '==', 'Driver');
-  if (organizationId) query = query.where('organizationId', '==', organizationId);
+  let query: any = db.collection('employees').where('role', '==', 'Driver');
   const snap = await query.get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
+  return snap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      ...data,
+      startDate: toPlain(data.startDate),
+      createdAt: toPlain(data.createdAt),
+      updatedAt: toPlain(data.updatedAt),
+    } as Employee;
+  });
 }
-
