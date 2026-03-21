@@ -5,13 +5,13 @@ import {
   createTrip,
   updateTrip,
   getTripById,
-  type TripData,
+
   type Trip,
-, deleteTrip } from '@/services/trip-service';
+  deleteTrip } from '@/services/trip-service';
 import { revalidatePath } from 'next/cache';
 
 export async function createTripAction(
-  data: TripData
+  data: Omit<Trip, 'id'>
 ): Promise<{ success: boolean; error?: string; tripId?: string }> {
   try {
     const newTrip = await createTrip(data);
@@ -29,7 +29,7 @@ export async function createTripAction(
 
 export async function updateTripAction(
   id: string,
-  data: Partial<TripData>
+  data: Partial<Trip>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await updateTrip(id, data);
