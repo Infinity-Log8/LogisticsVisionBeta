@@ -161,3 +161,13 @@ export async function markInvoiceAsPaidAction(
     return { success: false, error: errorMessage };
   }
 }
+
+export async function bulkDeleteInvoiceAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { deleteInvoice } = await import('@/services/invoice-service');
+    await Promise.all(ids.map(id => deleteInvoice(id)));
+    const { revalidatePath } = await import('next/cache');
+    revalidatePath('/accounting/invoices');
+    return { success: true };
+  } catch (e: any) { return { success: false, error: e.message }; }
+}

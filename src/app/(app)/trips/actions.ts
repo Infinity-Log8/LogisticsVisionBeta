@@ -7,7 +7,7 @@ import {
   getTripById,
   type TripData,
   type Trip,
-} from '@/services/trip-service';
+, deleteTrip } from '@/services/trip-service';
 import { revalidatePath } from 'next/cache';
 
 export async function createTripAction(
@@ -84,5 +84,25 @@ export async function completeTripAction(
       errorMessage = "A connection to the database could not be established. Please contact support if the issue persists.";
     }
     return { success: false, error: errorMessage };
+  }
+}
+
+export async function deleteTripAction(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await deleteTrip(id);
+    revalidatePath('/trips');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Failed to delete' };
+  }
+}
+
+export async function bulkDeleteTripAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
+  try {
+    await Promise.all(ids.map(id => deleteTrip(id)));
+    revalidatePath('/trips');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Failed to delete' };
   }
 }

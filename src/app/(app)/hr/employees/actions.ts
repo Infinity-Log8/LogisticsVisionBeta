@@ -1,7 +1,7 @@
 
 'use server';
 
-import { createEmployee, updateEmployee, getDrivers, type Employee } from '@/services/employee-service';
+import { createEmployee, updateEmployee, getDrivers, type Employee , deleteEmployee } from '@/services/employee-service';
 import type { EmployeeData } from '@/services/employee-service';
 import { revalidatePath } from 'next/cache';
 
@@ -36,4 +36,24 @@ export async function updateEmployeeAction(id: string, data: Partial<Omit<Employ
 
 export async function getDriversAction(): Promise<Employee[]> {
     return getDrivers();
+}
+
+export async function deleteEmployeeAction(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await deleteEmployee(id);
+    revalidatePath('/hr/employees');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Failed to delete' };
+  }
+}
+
+export async function bulkDeleteEmployeeAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
+  try {
+    await Promise.all(ids.map(id => deleteEmployee(id)));
+    revalidatePath('/hr/employees');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Failed to delete' };
+  }
 }

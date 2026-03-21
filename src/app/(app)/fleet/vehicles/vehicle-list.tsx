@@ -1,107 +1,109 @@
-
 'use client';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
-import type { Vehicle } from '@/services/vehicle-service';
-
-const getStatusVariant = (status: string) => {
-  switch (status) {
-    case 'Operational': return 'secondary';
-    case 'In Repair': return 'destructive';
-    case 'Awaiting Inspection': return 'outline';
-    default: return 'default';
-  }
-};
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { type Vehicle } from '@/services/vehicle-service';
+import Link from 'next/link';
+import { deleteVehicleAction, bulkDeleteVehicleAction } from './actions';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from '@/hooks/use-toast';
 
 export function VehicleList({ vehicles }: { vehicles: Vehicle[] }) {
+  const router = useRouter();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
-    if (vehicles.length === 0) {
-        return (
-          <div className="text-center text-muted-foreground p-8">
-            No vehicles found in the database.
-            <br />
-            Try running `npm run setup:admin` to seed sample data.
-          </div>
-        );
-    }
-    
-    return (
-        <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Vehicle ID</TableHead>
-                <TableHead>Model</TableHead>
-                <TableHead>Driver</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Next Maintenance</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {vehicles.map((vehicle) => (
-                <TableRow key={vehicle.id}>
-                  <TableCell className="font-medium">
-                    <Link
-                      href={`/fleet/vehicles/${vehicle.id}`}
-                      className="text-primary hover:underline"
-                    >
-                      {vehicle.id}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{vehicle.model} ({vehicle.year})</TableCell>
-                  <TableCell>
-                      {vehicle.driverId && vehicle.driverName ? (
-                          <Link href={`/fleet/drivers/${vehicle.driverId}`} className="text-primary hover:underline">{vehicle.driverName}</Link>
-                      ) : (
-                          <span className="text-muted-foreground">Unassigned</span>
-                      )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(vehicle.status) as 'default' | 'secondary' | 'outline' | 'destructive'}>{vehicle.status}</Badge>
-                  </TableCell>
-                  <TableCell>{vehicle.maintenanceDue}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                         <DropdownMenuItem asChild>
-                          <Link href={`/fleet/vehicles/${vehicle.id}`}>View Details</Link>
-                        </DropdownMenuItem>
-                         <DropdownMenuItem asChild>
-                          <Link href={`/fleet/vehicles/edit/${vehicle.id}`}>Edit</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Schedule Maintenance</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-        </Table>
-    );
+  const allIds = vehicles.map(v => v.id!).filter(Boolean);
+  const allSelected = allIds.length > 0 && allIds.every(id => selected.has(id));
+
+  function toggleAll() {
+    if (allSelected) setSelected(new Set());
+    else setSelected(new Set(allIds));
+  }
+  function toggleOne(id: string) {
+    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Delete this vehicle? This cannot be undone.')) return;
+    setDeleting(true);
+    const res = await deleteVehicleAction(id);
+    setDeleting(false);
+    if (res.success) { toast({ title: 'Vehicle deleted' }); router.refresh(); }
+    else toast({ title: 'Error', description: res.error, variant: 'destructive' });
+  }
+
+  async function handleBulkDelete() {
+    if (selected.size === 0) return;
+    if (!confirm(`Delete ${selected.size} vehicle(s)? This cannot be undone.`)) return;
+    setDeleting(true);
+    const res = await bulkDeleteVehicleAction(Array.from(selected));
+    setDeleting(false);
+    if (res.success) { toast({ title: `${selected.size} vehicle(s) deleted` }); setSelected(new Set()); router.refresh(); }
+    else toast({ title: 'Error', description: res.error, variant: 'destructive' });
+  }
+
+  if (vehicles.length === 0) return <p className="text-muted-foreground py-8 text-center">No vehicles found in the database.</p>;
+
+  return (
+    <div className="space-y-2">
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 bg-muted/50 border rounded-lg px-4 py-2">
+          <span className="text-sm font-medium">{selected.size} selected</span>
+          <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={deleting}>
+            <Trash2 className="w-4 h-4 mr-1" /> Delete Selected
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>Clear</Button>
+        </div>
+      )}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-10"><Checkbox checked={allSelected} onCheckedChange={toggleAll} /></TableHead>
+            <TableHead>Vehicle ID</TableHead>
+            <TableHead>Model</TableHead>
+            <TableHead>Driver</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Next Maintenance</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {vehicles.map(vehicle => (
+            <TableRow key={vehicle.id} className={selected.has(vehicle.id!) ? 'bg-muted/30' : ''}>
+              <TableCell><Checkbox checked={selected.has(vehicle.id!)} onCheckedChange={() => toggleOne(vehicle.id!)} /></TableCell>
+              <TableCell><Link href={`/fleet/vehicles/${vehicle.id}`} className="font-medium text-primary hover:underline">{vehicle.id}</Link></TableCell>
+              <TableCell>{vehicle.make} {vehicle.model} ({vehicle.year})</TableCell>
+              <TableCell>{vehicle.driverName ? <Link href="#" className="text-primary hover:underline">{vehicle.driverName}</Link> : <span className="text-muted-foreground">Unassigned</span>}</TableCell>
+              <TableCell><Badge variant={vehicle.status === 'Operational' ? 'secondary' : 'outline'}>{vehicle.status}</Badge></TableCell>
+              <TableCell>{vehicle.maintenanceDue ? String(vehicle.maintenanceDue).substring(0,10) : '-'}</TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem asChild><Link href={`/fleet/vehicles/${vehicle.id}`}>View Details</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link href={`/fleet/vehicles/edit/${vehicle.id}`}>Edit</Link></DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(vehicle.id!)} disabled={deleting}>
+                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
 }

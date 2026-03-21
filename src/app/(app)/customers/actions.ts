@@ -1,7 +1,7 @@
 
 'use server';
 
-import { createCustomer, updateCustomer, type Customer } from '@/services/customer-service';
+import { createCustomer, updateCustomer, type Customer , deleteCustomer } from '@/services/customer-service';
 import { revalidatePath } from 'next/cache';
 
 export async function createCustomerAction(data: Omit<Customer, "id">): Promise<{ success: boolean, error?: string, customerId?: string }> {
@@ -45,5 +45,25 @@ export async function deactivateCustomerAction(id: string): Promise<{ success: b
         errorMessage = "A connection to the database could not be established. Please contact support if the issue persists.";
     }
     return { success: false, error: errorMessage };
+  }
+}
+
+export async function deleteCustomerAction(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await deleteCustomer(id);
+    revalidatePath('/customers');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Failed to delete' };
+  }
+}
+
+export async function bulkDeleteCustomerAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
+  try {
+    await Promise.all(ids.map(id => deleteCustomer(id)));
+    revalidatePath('/customers');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Failed to delete' };
   }
 }

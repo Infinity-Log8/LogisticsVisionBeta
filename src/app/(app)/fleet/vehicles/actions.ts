@@ -1,7 +1,7 @@
 
 'use server';
 
-import { createVehicle, updateVehicle } from '@/services/vehicle-service';
+import { createVehicle, updateVehicle , deleteVehicle } from '@/services/vehicle-service';
 import type { VehicleData } from '@/services/vehicle-service';
 import { revalidatePath } from 'next/cache';
 
@@ -32,4 +32,24 @@ export async function updateVehicleAction(id: string, data: VehicleData): Promis
         }
         return { success: false, error: errorMessage };
     }
+}
+
+export async function deleteVehicleAction(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await deleteVehicle(id);
+    revalidatePath('/fleet/vehicles');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Failed to delete' };
+  }
+}
+
+export async function bulkDeleteVehicleAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
+  try {
+    await Promise.all(ids.map(id => deleteVehicle(id)));
+    revalidatePath('/fleet/vehicles');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Failed to delete' };
+  }
 }

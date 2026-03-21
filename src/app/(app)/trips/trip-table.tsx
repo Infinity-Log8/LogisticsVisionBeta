@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import {
+import { Trash2,
   Table,
   TableBody,
   TableCell,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import type { Trip } from '@/services/trip-service';
+import { deleteTripAction, bulkDeleteTripAction } from './actions';
 import { CancelTripMenuItem } from './cancel-trip-menu-item';
 import { CompleteTripMenuItem } from './complete-trip-menu-item';
 
@@ -44,6 +46,30 @@ const getStatusVariant = (status: Trip['status']) => {
 };
 
 export function TripTable({ trips }: TripTableProps) {
+  const router = useRouter();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const allIds = trips.map(t => t.id!).filter(Boolean);
+  const allSelected = allIds.length > 0 && allIds.every(id => selected.has(id));
+  function toggleAll() { if (allSelected) setSelected(new Set()); else setSelected(new Set(allIds)); }
+  function toggleOne(id: string) { setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); }
+  async function handleDelete(id: string) {
+    if (!confirm('Delete this trip? This cannot be undone.')) return;
+    setDeleting(true);
+    const res = await deleteTripAction(id);
+    setDeleting(false);
+    if (res.success) { toast({ title: 'Trip deleted' }); router.refresh(); }
+    else toast({ title: 'Error', description: res.error, variant: 'destructive' });
+  }
+  async function handleBulkDelete() {
+    if (selected.size === 0) return;
+    if (!confirm('Delete ' + selected.size + ' trip(s)? This cannot be undone.')) return;
+    setDeleting(true);
+    const res = await bulkDeleteTripAction(Array.from(selected));
+    setDeleting(false);
+    if (res.success) { toast({ title: selected.size + ' trip(s) deleted' }); setSelected(new Set()); router.refresh(); }
+    else toast({ title: 'Error', description: res.error, variant: 'destructive' });
+  }
   if (trips.length === 0) {
     return (
       <div className="p-8 text-center text-muted-foreground">
@@ -53,10 +79,20 @@ export function TripTable({ trips }: TripTableProps) {
   }
 
   return (
-    <Table>
+    {selected.size > 0 && (
+        <div className="flex items-center gap-3 bg-muted/50 border rounded-lg px-4 py-2 mb-2">
+          <span className="text-sm font-medium">{selected.size} selected</span>
+          <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={deleting}>
+            <Trash2 className="w-4 h-4 mr-1" /> Delete Selected
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>Clear</Button>
+        </div>
+      )}
+      <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Trip ID</TableHead>
+          <TableHead className="w-10"><Checkbox checked={allSelected} onCheckedChange={toggleAll} /></TableHead>
+            <TableHead>Trip ID</TableHead>
           <TableHead className="hidden sm:table-cell">Customer</TableHead>
           <TableHead className="hidden lg:table-cell">Route</TableHead>
           <TableHead className="hidden md:table-cell">Driver</TableHead>
@@ -73,6 +109,7 @@ export function TripTable({ trips }: TripTableProps) {
           const isCancellable = trip.status !== 'Delivered' && trip.status !== 'Cancelled';
           return (
           <TableRow key={trip.id}>
+              <TableCell><Checkbox checked={selected.has(trip.id!)} onCheckedChange={() => toggleOne(trip.id!)} /></TableCell>
             <TableCell className="font-medium">
               <Link
                 href={`/trips/${trip.id}`}
@@ -113,7 +150,10 @@ export function TripTable({ trips }: TripTableProps) {
                   <DropdownMenuItem asChild>
                     <Link href={`/trips/edit/${trip.id}`}>Edit Trip</Link>
                   </DropdownMenuItem>
-                  <CompleteTripMenuItem tripId={trip.id} tripStatus={trip.status} />
+                  <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(trip.id!)} disabled={deleting}>
+                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                    <CompleteTripMenuItem tripId={trip.id} tripStatus={trip.status} />
                   {isCancellable ? (
                     <CancelTripMenuItem tripId={trip.id} />
                   ) : (
