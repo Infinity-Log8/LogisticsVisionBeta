@@ -64,9 +64,9 @@ export async function getTripById(id: string, organizationId?: string): Promise<
 }
 
 export async function getTrips(organizationId?: string, filters?: TripFilters): Promise<Trip[]> {
-  if (!organizationId) return [];
+  // Allow fetching all trips when no orgId (dev mode)
 
-  let q: FirebaseFirestore.Query = db!.collection('trips').where("organizationId", "==", organizationId || "");
+  let q: FirebaseFirestore.Query = db!.collection('trips'); if (organizationId) q = (q as any).where("organizationId", "==", organizationId);
   if (filters?.customerId) q = q.where('customerId', '==', filters.customerId);
   if (filters?.driverId) q = q.where('driverId', '==', filters.driverId);
   if (filters?.status) q = q.where('status', '==', filters.status);
@@ -79,7 +79,7 @@ export async function getTrips(organizationId?: string, filters?: TripFilters): 
     return null;
   });
   if (!snap) return [];
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Trip));
+  return snap.docs.map(d => { const data = d.data(); if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate().toISOString(); return { id: d.id, ...data } as Trip; });
 }
 
 export async function deleteTrip(id: string): Promise<void> {

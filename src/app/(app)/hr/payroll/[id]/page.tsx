@@ -22,7 +22,7 @@ import { getEmployees, type Employee } from '@/services/employee-service';
 import { getPayrollRunById, type PayrollRun } from '@/services/payroll-service';
 import { updatePayrollRunAction, finalizePayrollRunAction } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 
 const employeePayrollSchema = z.object({

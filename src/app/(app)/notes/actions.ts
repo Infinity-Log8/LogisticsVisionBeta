@@ -1,25 +1,37 @@
 'use server';
-import { db } from '@/lib/firebase-admin';
-import { Timestamp } from 'firebase-admin/firestore';
+
+import { ensureDbConnected } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 
 export async function createNoteAction(data: { title: string; content: string; category?: string }) {
   try {
-    await db!.collection('notes').add({ ...data, createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
+    const db = await ensureDbConnected();
+    await db!.collection('notes').add({
+      ...data,
+      createdAt: new Date().toISOString(),
+    });
     revalidatePath('/notes');
     return { success: true };
-  } catch (e: any) { return { success: false, error: e.message }; }
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
 }
 
-export async function deleteNoteAction(id: string) {
+export async function deleteNoteAction(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
   try {
+    const db = await ensureDbConnected();
     await db!.collection('notes').doc(id).delete();
     revalidatePath('/notes');
     return { success: true };
-  } catch (e: any) { return { success: false, error: e.message }; }
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
 }
 
 export async function getNotesAction() {
+  const db = await ensureDbConnected();
   const snap = await db!.collection('notes').orderBy('createdAt', 'desc').get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as any));
 }

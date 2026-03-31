@@ -34,22 +34,36 @@ export async function updateVehicleAction(id: string, data: VehicleData): Promis
     }
 }
 
-export async function deleteVehicleAction(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteVehicleAction(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
   try {
-    await deleteVehicle(id);
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('vehicles:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await tdb.delete('vehicles', id);
+    const { revalidatePath } = await import('next/cache');
     revalidatePath('/fleet/vehicles');
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Failed to delete' };
+    return { success: false, error: e.message };
   }
 }
 
-export async function bulkDeleteVehicleAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
+export async function bulkDeleteVehicleAction(
+  ids: string[]
+): Promise<{ success: boolean; error?: string }> {
   try {
-    await Promise.all(ids.map(id => deleteVehicle(id)));
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('vehicles:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await Promise.all(ids.map((id) => tdb.delete('vehicles', id)));
+    const { revalidatePath } = await import('next/cache');
     revalidatePath('/fleet/vehicles');
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Failed to delete' };
+    return { success: false, error: e.message };
   }
 }

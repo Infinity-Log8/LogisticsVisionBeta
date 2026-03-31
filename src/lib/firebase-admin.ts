@@ -29,7 +29,7 @@ function initializeFirebaseAdmin() {
     } else {
       // Initialize new app
       adminApp = initializeApp({
-        credential: applicationDefault(),
+        credential: applicationDefault(), projectId: process.env.GOOGLE_CLOUD_PROJECT || "logisticsvisionbeta",
         storageBucket: process.env.STORAGE_BUCKET || undefined, // optional
       });
       console.log("✅ Firebase Admin SDK initialized using service account.");

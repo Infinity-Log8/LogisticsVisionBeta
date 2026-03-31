@@ -38,22 +38,36 @@ export async function getDriversAction(): Promise<Employee[]> {
     return getDrivers();
 }
 
-export async function deleteEmployeeAction(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteEmployeeAction(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
   try {
-    await deleteEmployee(id);
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('employees:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await tdb.delete('employees', id);
+    const { revalidatePath } = await import('next/cache');
     revalidatePath('/hr/employees');
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Failed to delete' };
+    return { success: false, error: e.message };
   }
 }
 
-export async function bulkDeleteEmployeeAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
+export async function bulkDeleteEmployeeAction(
+  ids: string[]
+): Promise<{ success: boolean; error?: string }> {
   try {
-    await Promise.all(ids.map(id => deleteEmployee(id)));
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('employees:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await Promise.all(ids.map((id) => tdb.delete('employees', id)));
+    const { revalidatePath } = await import('next/cache');
     revalidatePath('/hr/employees');
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Failed to delete' };
+    return { success: false, error: e.message };
   }
 }

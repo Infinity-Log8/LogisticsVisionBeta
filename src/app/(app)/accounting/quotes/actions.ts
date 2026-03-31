@@ -122,15 +122,16 @@ export async function deleteQuoteAction(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await deleteQuote(id);
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('quotes:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await tdb.delete('quotes', id);
+    const { revalidatePath } = await import('next/cache');
     revalidatePath('/accounting/quotes');
     return { success: true };
   } catch (e: any) {
-    let errorMessage = e.message || 'An unknown error occurred.';
-    if (String(e.message).includes('Firestore is not initialized')) {
-      errorMessage = "A connection to the database could not be established. Please contact support if the issue persists.";
-    }
-    return { success: false, error: errorMessage };
+    return { success: false, error: e.message };
   }
 }
 

@@ -16,11 +16,11 @@ export interface LeaveRequest {
 }
 
 export async function getLeaveRequests(organizationId?: string): Promise<LeaveRequest[]> {
-  if (!organizationId) return [];
+
 
   const db = await ensureDbConnected();
-  const snap = await db.collection('leave_requests').where('organizationId', '==', organizationId).orderBy('startDate', 'desc').get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as LeaveRequest));
+  const leaveQuery = organizationId ? db.collection('leave_requests').where('organizationId', '==', organizationId).orderBy('startDate', 'desc') : db.collection('leave_requests').orderBy('startDate', 'desc'); const snap = await leaveQuery.get();
+  return snap.docs.map(d => { const data = d.data(); if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate().toISOString(); if (data.updatedAt?.toDate) data.updatedAt = data.updatedAt.toDate().toISOString(); return { id: d.id, ...data } as LeaveRequest; });
 }
 
 export async function createLeaveRequest(data: Partial<LeaveRequest> | Omit<LeaveRequest, 'id'>): Promise<LeaveRequest> {

@@ -18,8 +18,9 @@ export interface PayrollRecord {
 
 export async function getPayrollRecords(organizationId?: string): Promise<PayrollRecord[]> {
   const db = await ensureDbConnected();
-  const snap = await db.collection('payroll').where('organizationId', '==', organizationId).orderBy('createdAt', 'desc').get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as PayrollRecord));
+  const query = organizationId ? db.collection('payroll').where('organizationId', '==', organizationId).orderBy('createdAt', 'desc') : db.collection('payroll').orderBy('createdAt', 'desc');
+  const snap = await query.get();
+  return snap.docs.map(d => { const data = d.data(); if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate().toISOString(); if (data.processedAt?.toDate) data.processedAt = data.processedAt.toDate().toISOString(); return { id: d.id, ...data } as PayrollRecord; });
 }
 
 export async function createPayrollRecord(data: Omit<PayrollRecord, 'id'>): Promise<PayrollRecord> {
@@ -48,7 +49,7 @@ export async function getPayrollRunById(id: string, organizationId?: string): Pr
   try {
     const doc = await db.collection('payroll').doc(id).get();
     if (!doc.exists) return null;
-    return { id: doc.id, ...doc.data() } as PayrollRun;
+    const docData = doc.data(); if (docData.createdAt?.toDate) docData.createdAt = docData.createdAt.toDate().toISOString(); if (docData.processedAt?.toDate) docData.processedAt = docData.processedAt.toDate().toISOString(); return { id: doc.id, ...docData } as PayrollRun;
   } catch (error) {
     console.error('Error fetching payroll run:', error);
     return null;

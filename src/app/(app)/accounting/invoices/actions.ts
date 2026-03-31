@@ -128,46 +128,48 @@ export async function deleteInvoiceAction(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
-    await deleteInvoice(id);
-    revalidatePath('/accounting/invoices');
-    revalidatePath('/accounting/pnl');
-    revalidatePath('/dashboard');
-    return { success: true };
-  } catch (e: any) {
-    let errorMessage = e.message || 'An unknown error occurred.';
-    if (String(e.message).includes('Firestore is not initialized')) {
-      errorMessage = "A connection to the database could not be established. Please contact support if the issue persists.";
-    }
-    return { success: false, error: errorMessage };
-  }
-}
-
-export async function markInvoiceAsPaidAction(
-  id: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    await updateInvoice(id, { status: 'Paid' });
-    revalidatePath('/accounting/invoices');
-    revalidatePath(`/accounting/invoices/${id}`);
-    revalidatePath('/accounting/pnl');
-    revalidatePath('/dashboard');
-    return { success: true };
-  } catch (e: any) {
-    let errorMessage = e.message || 'An unknown error occurred.';
-    if (String(e.message).includes('Firestore is not initialized')) {
-      errorMessage = "A connection to the database could not be established. Please contact support if the issue persists.";
-    }
-    return { success: false, error: errorMessage };
-  }
-}
-
-export async function bulkDeleteInvoiceAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
-  try {
-    const { deleteInvoice } = await import('@/services/invoice-service');
-    await Promise.all(ids.map(id => deleteInvoice(id)));
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('invoices:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await tdb.delete('invoices', id);
     const { revalidatePath } = await import('next/cache');
     revalidatePath('/accounting/invoices');
     return { success: true };
-  } catch (e: any) { return { success: false, error: e.message }; }
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+export async function bulkDeleteInvoicesAction(
+  ids: string[]
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('invoices:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await Promise.all(ids.map((id) => tdb.delete('invoices', id)));
+    const { revalidatePath } = await import('next/cache');
+    revalidatePath('/accounting/invoices');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+export async function markInvoiceAsPaidAction(invoiceId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('invoices:update');
+    const tdb = getTenantDB(user.tenantId!);
+    await tdb.update('invoices', invoiceId, { status: 'Paid', paidAt: new Date().toISOString() });
+    const { revalidatePath } = await import('next/cache');
+    revalidatePath('/accounting/invoices');
+    return { success: true };
+  } catch (e: any) {
+    let errorMessage = e.message || 'An unknown error occurred.';
+    return { success: false, error: errorMessage };
+  }
 }

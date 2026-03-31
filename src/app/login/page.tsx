@@ -28,9 +28,11 @@ const LoginPage = () => {
     setLoading(true);
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard");
-    } catch (error: any) {
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+                  const idToken = await credential.user.getIdToken();
+                                await fetch('/api/auth/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }) });
+                                              router.push("/dashboard");
+                                                  } catch (error: any) {
       setError(error.message);
     } finally {
       setLoading(false);

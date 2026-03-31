@@ -48,22 +48,36 @@ export async function deactivateCustomerAction(id: string): Promise<{ success: b
   }
 }
 
-export async function deleteCustomerAction(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteCustomerAction(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
   try {
-    await deleteCustomer(id);
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('customers:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await tdb.delete('customers', id);
+    const { revalidatePath } = await import('next/cache');
     revalidatePath('/customers');
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Failed to delete' };
+    return { success: false, error: e.message };
   }
 }
 
-export async function bulkDeleteCustomerAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
+export async function bulkDeleteCustomerAction(
+  ids: string[]
+): Promise<{ success: boolean; error?: string }> {
   try {
-    await Promise.all(ids.map(id => deleteCustomer(id)));
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('customers:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await Promise.all(ids.map((id) => tdb.delete('customers', id)));
+    const { revalidatePath } = await import('next/cache');
     revalidatePath('/customers');
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Failed to delete' };
+    return { success: false, error: e.message };
   }
 }

@@ -87,22 +87,36 @@ export async function completeTripAction(
   }
 }
 
-export async function deleteTripAction(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteTripAction(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
   try {
-    await deleteTrip(id);
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('trips:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await tdb.delete('trips', id);
+    const { revalidatePath } = await import('next/cache');
     revalidatePath('/trips');
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Failed to delete' };
+    return { success: false, error: e.message };
   }
 }
 
-export async function bulkDeleteTripAction(ids: string[]): Promise<{ success: boolean; error?: string }> {
+export async function bulkDeleteTripAction(
+  ids: string[]
+): Promise<{ success: boolean; error?: string }> {
   try {
-    await Promise.all(ids.map(id => deleteTrip(id)));
+    const { requirePermission } = await import('@/lib/tenant-auth');
+    const { getTenantDB } = await import('@/lib/tenant-db');
+    const user = await requirePermission('trips:delete');
+    const tdb = getTenantDB(user.tenantId!);
+    await Promise.all(ids.map((id) => tdb.delete('trips', id)));
+    const { revalidatePath } = await import('next/cache');
     revalidatePath('/trips');
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Failed to delete' };
+    return { success: false, error: e.message };
   }
 }

@@ -1,145 +1,231 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─── Helper Functions ─────────────────────────────────────────────────
+    // ── Helper functions ──────────────────────────────────────────────────
 
-    function isAuthenticated() {
+    function isSignedIn() {
       return request.auth != null;
     }
 
+    function currentUid() {
+      return request.auth.uid;
+    }
+
+    function getClaim(key) {
+      return request.auth.token[key];
+    }
+
+    function tenantId() {
+      return getClaim('tenantId');
+    }
+
+    function userRole() {
+      return getClaim('role');
+    }
+
+    function isOwner() {
+      return getClaim('isOwner') == true || userRole() == 'owner';
+    }
+
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.admin == true;
-    }
-
-    function isOwner(uid) {
-      return isAuthenticated() && request.auth.uid == uid;
-    }
-
-    // Get the current user's Firestore role document
-    function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-    }
-
-    function hasRole(role) {
-      return isAuthenticated() && getUserRole() == role;
+      return getClaim('isAdmin') == true || userRole() == 'admin' || isOwner();
     }
 
     function isManager() {
-      return isAuthenticated() && (isAdmin() || hasRole('Manager'));
+      return userRole() == 'manager' || isAdmin();
     }
 
-    function isStaff() {
-      return isAuthenticated() && (isAdmin() || hasRole('Manager') || hasRole('Staff'));
+    function isDriver() {
+      return userRole() == 'driver' || isManager();
     }
 
-    // ─── users collection ─────────────────────────────────────────────────
-    // Users can read their own doc; admins/managers can read all; only admins can write
-    match /users/{userId} {
-      allow read: if isOwner(userId) || isManager();
-      allow create: if isAdmin();
-      allow update: if isAdmin() || isOwner(userId);
-      allow delete: if isAdmin();
+    function belongsToTenant(tid) {
+      return isSignedIn() && tenantId() == tid;
     }
 
-    // ─── settings collection ──────────────────────────────────────────────
-    // All authenticated users can read; only admins can write
-    match /settings/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
+    function isTenantOwner(tid) {
+      return belongsToTenant(tid) && isOwner();
     }
 
-    // ─── customers collection ─────────────────────────────────────────────
-    match /customers/{customerId} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isManager();
+    function isTenantAdmin(tid) {
+      return belongsToTenant(tid) && isAdmin();
     }
 
-    // ─── vehicles (fleet) collection ─────────────────────────────────────
-    match /vehicles/{vehicleId} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isManager();
+    function isTenantManager(tid) {
+      return belongsToTenant(tid) && isManager();
     }
 
-    // ─── trips collection ─────────────────────────────────────────────────
-    match /trips/{tripId} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isManager();
+    function isTenantMember(tid) {
+      return belongsToTenant(tid);
     }
 
-    // ─── invoices collection ──────────────────────────────────────────────
-    match /invoices/{invoiceId} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isManager();
+    function isOwnResource(uid) {
+      return isSignedIn() && currentUid() == uid;
     }
 
-    // ─── quotes collection ────────────────────────────────────────────────
-    match /quotes/{quoteId} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isManager();
+    function validTenantWrite(tid) {
+      return request.resource.data.tenantId == tid;
     }
 
-    // ─── expenses collection ──────────────────────────────────────────────
-    match /expenses/{expenseId} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isManager();
+    // ── Tenants ───────────────────────────────────────────────────────────
+
+    match /tenants/{tenantId} {
+      allow read: if isTenantMember(tenantId);
+      allow create: if isSignedIn(); // restricted server-side
+      allow update: if isTenantAdmin(tenantId);
+      allow delete: if isTenantOwner(tenantId);
+
+      // ── Members subcollection ─────────────────────────────────────────
+
+      match /members/{userId} {
+        allow read: if isTenantMember(tenantId);
+        allow create: if isTenantAdmin(tenantId);
+        allow update: if isTenantAdmin(tenantId) || isOwnResource(userId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Invites subcollection ─────────────────────────────────────────
+
+      match /invites/{inviteId} {
+        allow read: if isTenantAdmin(tenantId);
+        allow create: if isTenantAdmin(tenantId) || isTenantManager(tenantId);
+        allow update: if isTenantAdmin(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Trips ─────────────────────────────────────────────────────────
+
+      match /trips/{tripId} {
+        allow read: if isTenantMember(tenantId);
+        allow create: if isTenantManager(tenantId)
+          && validTenantWrite(tenantId);
+        allow update: if isTenantManager(tenantId)
+          || (isTenantMember(tenantId)
+              && resource.data.assignedDriverId == currentUid());
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Vehicles / Fleet ──────────────────────────────────────────────
+
+      match /vehicles/{vehicleId} {
+        allow read: if isTenantMember(tenantId);
+        allow write: if isTenantManager(tenantId)
+          && validTenantWrite(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Drivers ───────────────────────────────────────────────────────
+
+      match /drivers/{driverId} {
+        allow read: if isTenantMember(tenantId);
+        allow write: if isTenantManager(tenantId)
+          && validTenantWrite(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Customers ─────────────────────────────────────────────────────
+
+      match /customers/{customerId} {
+        allow read: if isTenantMember(tenantId);
+        allow write: if isTenantManager(tenantId)
+          && validTenantWrite(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Invoices ──────────────────────────────────────────────────────
+
+      match /invoices/{invoiceId} {
+        allow read: if isTenantMember(tenantId);
+        allow create: if isTenantManager(tenantId)
+          && validTenantWrite(tenantId);
+        allow update: if isTenantAdmin(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Expenses ──────────────────────────────────────────────────────
+
+      match /expenses/{expenseId} {
+        allow read: if isTenantMember(tenantId);
+        allow create: if isTenantMember(tenantId)
+          && validTenantWrite(tenantId)
+          && request.resource.data.submittedBy == currentUid();
+        allow update: if isTenantManager(tenantId)
+          || (isTenantMember(tenantId)
+              && resource.data.submittedBy == currentUid()
+              && resource.data.status == 'draft');
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Employees / HR ────────────────────────────────────────────────
+
+      match /employees/{employeeId} {
+        allow read: if isTenantManager(tenantId)
+          || isOwnResource(employeeId);
+        allow write: if isTenantAdmin(tenantId)
+          && validTenantWrite(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      match /leaveRequests/{requestId} {
+        allow read: if isTenantManager(tenantId)
+          || resource.data.employeeId == currentUid();
+        allow create: if isTenantMember(tenantId)
+          && validTenantWrite(tenantId)
+          && request.resource.data.employeeId == currentUid();
+        allow update: if isTenantManager(tenantId)
+          || (resource.data.employeeId == currentUid()
+              && resource.data.status == 'pending');
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Fuel Logs ─────────────────────────────────────────────────────
+
+      match /fuelLogs/{logId} {
+        allow read: if isTenantMember(tenantId);
+        allow create: if isTenantMember(tenantId)
+          && validTenantWrite(tenantId);
+        allow update: if isTenantManager(tenantId);
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      // ── Notes ─────────────────────────────────────────────────────────
+
+      match /notes/{noteId} {
+        allow read: if isTenantMember(tenantId);
+        allow create: if isTenantMember(tenantId)
+          && validTenantWrite(tenantId);
+        allow update: if isTenantMember(tenantId)
+          && (resource.data.authorId == currentUid()
+              || isTenantAdmin(tenantId));
+        allow delete: if isTenantAdmin(tenantId)
+          || resource.data.authorId == currentUid();
+      }
+
+      // ── GPS Tracking Events ───────────────────────────────────────────
+
+      match /trackingEvents/{eventId} {
+        allow read: if isTenantManager(tenantId);
+        allow create: if isTenantMember(tenantId)
+          && validTenantWrite(tenantId);
+        allow update, delete: if isTenantAdmin(tenantId);
+      }
     }
 
-    // ─── fuelLogs collection ──────────────────────────────────────────────
-    match /fuelLogs/{logId} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
-      allow delete: if isManager();
+    // ── User-Tenant mappings (read-only for users) ────────────────────────
+
+    match /userTenants/{mappingId} {
+      allow read: if isSignedIn()
+        && (resource.data.userId == currentUid() || isAdmin());
+      allow write: if false; // Only writable server-side
     }
 
-    // ─── employees collection ─────────────────────────────────────────────
-    // Employees can read their own record; managers can read all; only admins can write
-    match /employees/{employeeId} {
-      allow read: if isManager() || isOwner(employeeId);
-      allow create, update: if isManager();
-      allow delete: if isAdmin();
-    }
+    // ── Invite tokens (write-once lookup) ─────────────────────────────────
 
-    // ─── payrollRuns collection ───────────────────────────────────────────
-    // Sensitive: only managers and admins can access
-    match /payrollRuns/{runId} {
-      allow read: if isManager();
-      allow create, update: if isManager();
-      allow delete: if isAdmin();
-    }
-
-    // ─── payouts collection ───────────────────────────────────────────────
-    match /payouts/{payoutId} {
-      allow read: if isManager();
-      allow create, update: if isManager();
-      allow delete: if isAdmin();
-    }
-
-    // ─── commissions collection ───────────────────────────────────────────
-    match /commissions/{commissionId} {
-      allow read: if isManager();
-      allow create, update: if isManager();
-      allow delete: if isAdmin();
-    }
-
-    // ─── leaveRequests collection ─────────────────────────────────────────
-    // Employees can read/create their own; managers can read all and update status
-    match /leaveRequests/{requestId} {
-      allow read: if isManager() || (isAuthenticated() && resource.data.employeeId == request.auth.uid);
-      allow create: if isAuthenticated();
-      allow update: if isManager() || (isAuthenticated() && resource.data.employeeId == request.auth.uid);
-      allow delete: if isManager();
-    }
-
-    // ─── Deny everything else ─────────────────────────────────────────────
-    match /{document=**} {
-      allow read, write: if false;
+    match /inviteTokens/{token} {
+      allow read: if isSignedIn();
+      allow write: if false; // Only writable server-side
     }
   }
 }
