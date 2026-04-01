@@ -37,7 +37,7 @@ function initializeFirebaseAdmin() {
 
     if (adminApp) {
       auth = getAuth(adminApp);
-      db = getFirestore(adminApp);
+      db = getFirestore(adminApp, process.env.FIRESTORE_DB_ID || 'logisticsvision');
 
       console.log("✅ Firestore connected successfully.");
 

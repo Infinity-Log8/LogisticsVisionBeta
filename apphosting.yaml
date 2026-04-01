@@ -11,3 +11,7 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: FIRESTORE_DB_ID
+    value: logisticsvision
+    availability:
+      - RUNTIME
