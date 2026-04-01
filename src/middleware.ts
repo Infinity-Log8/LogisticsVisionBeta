@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   '/join',
   '/api/auth/session',
   '/api/tenant/invite',
+  '/api/register',
   '/_next',
   '/favicon.ico',
   '/globals.css',
