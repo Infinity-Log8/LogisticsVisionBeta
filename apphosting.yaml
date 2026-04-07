@@ -15,3 +15,8 @@ env:
     value: logisticsvision
     availability:
       - RUNTIME
+  - variable: GOOGLE_CLOUD_PROJECT
+    value: logistics-vision-c82ts
+    availability:
+      - BUILD
+      - RUNTIME
