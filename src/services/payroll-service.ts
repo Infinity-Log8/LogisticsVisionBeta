@@ -1,7 +1,9 @@
 'use server';
 import { ensureDbConnected } from '@/lib/firebase-admin';
+import { generatePayslipId } from '@/lib/generate-id';
 
 export interface PayrollRecord {
+  payslipRef?: string; // Human-friendly payslip reference (PAY-YYYYMMDD-XXXX)
   id?: string;
   organizationId: string;
   employeeId?: string;
@@ -25,7 +27,9 @@ export async function getPayrollRecords(organizationId?: string): Promise<Payrol
 
 export async function createPayrollRecord(data: Omit<PayrollRecord, 'id'>): Promise<PayrollRecord> {
   const db = await ensureDbConnected();
-  const ref = await db.collection('payroll').add({ ...data, createdAt: new Date() });
+  const payslipRef = generatePayslipId();
+    const ref = await db.collection('payroll').add({
+      payslipRef, ...data, createdAt: new Date() });
   return { id: ref.id, ...data };
 }
 
@@ -62,7 +66,9 @@ export type PayrollRunData = Omit<PayrollRun, 'id'>;
 export async function createPayrollRun(data: Omit<PayrollRun, 'id'>): Promise<PayrollRun> {
   const db = await ensureDbConnected();
   try {
-    const ref = await db.collection('payroll').add({ ...data, createdAt: new Date() });
+    const payslipRef = generatePayslipId();
+    const ref = await db.collection('payroll').add({
+      payslipRef, ...data, createdAt: new Date() });
     return { id: ref.id, ...data };
   } catch (error) {
     console.error('Error creating payroll run:', error);

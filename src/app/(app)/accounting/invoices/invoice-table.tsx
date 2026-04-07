@@ -159,7 +159,7 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
                 />
               </TableCell>
               <TableCell className="font-medium">
-                <Link href={`/accounting/invoices/${invoice.id}`} className="text-primary hover:underline">{invoice.id}</Link>
+                <Link href={`/accounting/invoices/${invoice.id}`} className="text-primary hover:underline">{invoice.invoiceRef || invoice.invoiceNumber || invoice.id.slice(0, 8).toUpperCase()}</Link>
               </TableCell>
               <TableCell>
                 {invoice.customerId ? (

@@ -1,7 +1,9 @@
 'use server';
 import { ensureDbConnected } from '@/lib/firebase-admin';
+import { generateCommissionId } from '@/lib/generate-id';
 
 export interface Commission {
+  commissionRef?: string; // Human-friendly reference (COM-YYYYMMDD-XXXX)
   id?: string;
   organizationId: string;
   driverId?: string;
@@ -28,7 +30,9 @@ export async function getCommissions(organizationId?: string): Promise<Commissio
 
 export async function createCommission(data: Omit<Commission, 'id'>): Promise<Commission> {
   const db = await ensureDbConnected();
-  const ref = await db.collection('commissions').add({ ...data, createdAt: new Date() });
+  const commissionRef = generateCommissionId();
+    const ref = await db.collection('commissions').add({
+      commissionRef, ...data, createdAt: new Date() });
   return { id: ref.id, ...data };
 }
 

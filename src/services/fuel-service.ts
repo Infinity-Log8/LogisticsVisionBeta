@@ -1,7 +1,9 @@
 'use server';
 import { ensureDbConnected } from '@/lib/firebase-admin';
+import { generateFuelId } from '@/lib/generate-id';
 
 export interface FuelLog {
+  fuelRef?: string; // Human-friendly reference (FUL-YYYYMMDD-XXXX)
   id?: string;
   organizationId: string;
   vehicleId?: string;
@@ -35,7 +37,9 @@ export async function getFuelLogsByVehicle(vehicleId: string, organizationId: st
 
 export async function createFuelLog(data: Omit<FuelLog, 'id'>): Promise<FuelLog> {
   const db = await ensureDbConnected();
-  const ref = await db.collection('fuel_logs').add({ ...data, createdAt: new Date() });
+  const fuelRef = generateFuelId();
+    const ref = await db.collection('fuel_logs').add({
+      fuelRef, ...data, createdAt: new Date() });
   return { id: ref.id, ...data };
 }
 

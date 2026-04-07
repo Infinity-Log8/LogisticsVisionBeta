@@ -1,7 +1,9 @@
 'use server';
 import { ensureDbConnected } from '@/lib/firebase-admin';
+import { generatePayoutId } from '@/lib/generate-id';
 
 export interface Payout {
+  payoutRef?: string; // Human-friendly reference (PTO-YYYYMMDD-XXXX)
   id?: string;
   organizationId: string;
   driverId?: string;
@@ -28,7 +30,9 @@ export async function getPayouts(organizationId: string): Promise<Payout[]> {
 
 export async function createPayout(data: Omit<Payout, 'id'>): Promise<Payout> {
   const db = await ensureDbConnected();
-  const ref = await db.collection('payouts').add({ ...data, createdAt: new Date() });
+  const payoutRef = generatePayoutId();
+    const ref = await db.collection('payouts').add({
+      payoutRef, ...data, createdAt: new Date() });
   return { id: ref.id, ...data };
 }
 

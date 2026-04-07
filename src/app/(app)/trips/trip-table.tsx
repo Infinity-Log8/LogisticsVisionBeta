@@ -147,7 +147,7 @@ export function TripTable({ trips }: TripTableProps) {
                 </TableCell>
                 <TableCell className="font-medium">
                   <Link href={`/trips/${trip.id}`} className="text-primary hover:underline">
-                    {trip.id}
+                    {trip.tripRef || trip.id.slice(0, 8).toUpperCase()}
                   </Link>
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">

@@ -44,8 +44,10 @@ export interface InvoiceWithUrl extends Invoice {
 }
 
 import { ensureDbConnected } from '@/lib/firebase-admin';
+import { generateInvoiceId } from '@/lib/generate-id';
 
 export interface Invoice {
+  invoiceRef?: string; // Human-friendly reference (INV-YYYYMMDD-XXXX)
   hasAttachment?: boolean;
   attachmentUrl?: string;
   total?: number;
@@ -91,7 +93,9 @@ export async function getInvoiceById(id: string, organizationId?: string): Promi
 
 export async function createInvoice(data: Omit<Invoice, 'id'>): Promise<Invoice> {
   const db = await ensureDbConnected();
-  const ref = await db.collection('invoices').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  const invoiceRef = generateInvoiceId();
+    const ref = await db.collection('invoices').add({
+      invoiceRef, ...data, createdAt: new Date(), updatedAt: new Date() });
   return { id: ref.id, ...data };
 }
 

@@ -1,7 +1,9 @@
 'use server';
 import { ensureDbConnected } from '@/lib/firebase-admin';
+import { generateQuoteId } from '@/lib/generate-id';
 
 export interface Quote {
+  quoteRef?: string; // Human-friendly reference (QUO-YYYYMMDD-XXXX)
   id?: string;
   organizationId: string;
   customerId?: string;
@@ -49,7 +51,9 @@ export async function getQuoteById(id: string, organizationId: string): Promise<
 
 export async function createQuote(data: Omit<Quote, 'id'>): Promise<Quote> {
   const db = await ensureDbConnected();
-  const ref = await db.collection('quotes').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  const quoteRef = generateQuoteId();
+    const ref = await db.collection('quotes').add({
+      quoteRef, ...data, createdAt: new Date(), updatedAt: new Date() });
   return { id: ref.id, ...data };
 }
 

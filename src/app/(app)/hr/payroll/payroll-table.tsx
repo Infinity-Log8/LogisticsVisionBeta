@@ -40,7 +40,8 @@ export function PayrollTable({ payrollRuns }: PayrollTableProps) {
     <Table>
       <TableHeader>
           <TableRow>
-              <TableHead>Pay Period</TableHead>
+              <TableHead>Ref #</TableHead>
+            <TableHead>Pay Period</TableHead>
               <TableHead>Pay Date</TableHead>
               <TableHead>Employees</TableHead>
               <TableHead className="text-right">Total Gross Pay</TableHead>
@@ -51,7 +52,8 @@ export function PayrollTable({ payrollRuns }: PayrollTableProps) {
       <TableBody>
           {payrollRuns.map((payroll) => (
               <TableRow key={payroll.id}>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-mono text-xs text-muted-foreground">{payroll.payslipRef || payroll.id.slice(0, 8).toUpperCase()}</TableCell>
+              <TableCell className="font-medium">
                       <Link href={`/hr/payroll/${payroll.id}`} className="text-primary hover:underline">
                           {format(new Date(payroll.payPeriodStart), 'd MMM yyyy')} - {format(new Date(payroll.payPeriodEnd), 'd MMM yyyy')}
                       </Link>

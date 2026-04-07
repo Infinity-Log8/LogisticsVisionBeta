@@ -1,11 +1,13 @@
 'use server';
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
+import { generateTripId } from '@/lib/generate-id';
 
 export type TripType = 'round-trip' | 'one-way';
 
 export type Trip = {
   id: string;
+  tripRef?: string; // Human-friendly trip reference (TRP-YYYYMMDD-XXXX)
   organizationId: string;
   customer: string;
   customerId: string;
@@ -42,7 +44,9 @@ export type TripFilters = {
 };
 
 export async function createTrip(data: Omit<Trip, 'id'>): Promise<Trip> {
-  const ref = await db!.collection('trips').add({ ...data, createdAt: Timestamp.now() });
+  const tripRef = generateTripId();
+    const ref = await db!.collection('trips').add({
+      tripRef, ...data, createdAt: Timestamp.now() });
   return { id: ref.id, ...data };
 }
 

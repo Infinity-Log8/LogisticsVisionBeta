@@ -1,7 +1,9 @@
 'use server';
 import { ensureDbConnected } from '@/lib/firebase-admin';
+import { generateExpenseId } from '@/lib/generate-id';
 
 export interface Expense {
+  expenseRef?: string; // Human-friendly reference (EXP-YYYYMMDD-XXXX)
   id?: string;
   organizationId: string;
   category?: string;
@@ -42,7 +44,9 @@ export async function getExpenseById(id: string): Promise<Expense | null> {
 
 export async function createExpense(data: Omit<Expense, 'id'>): Promise<Expense> {
   const db = await ensureDbConnected();
-  const ref = await db.collection('expenses').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  const expenseRef = generateExpenseId();
+    const ref = await db.collection('expenses').add({
+      expenseRef, ...data, createdAt: new Date(), updatedAt: new Date() });
   return { id: ref.id, ...data };
 }
 

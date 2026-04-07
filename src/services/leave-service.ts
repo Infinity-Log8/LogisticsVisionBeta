@@ -1,7 +1,9 @@
 'use server';
 import { ensureDbConnected } from '@/lib/firebase-admin';
+import { generateLeaveId } from '@/lib/generate-id';
 
 export interface LeaveRequest {
+  leaveRef?: string; // Human-friendly reference (LVE-YYYYMMDD-XXXX)
   id?: string;
   organizationId: string;
   employeeId?: string;
@@ -25,7 +27,9 @@ export async function getLeaveRequests(organizationId?: string): Promise<LeaveRe
 
 export async function createLeaveRequest(data: Partial<LeaveRequest> | Omit<LeaveRequest, 'id'>): Promise<LeaveRequest> {
   const db = await ensureDbConnected();
-  const ref = await db.collection('leave_requests').add({ ...data, createdAt: new Date(), updatedAt: new Date() });
+  const leaveRef = generateLeaveId();
+    const ref = await db.collection('leave_requests').add({
+      leaveRef, ...data, createdAt: new Date(), updatedAt: new Date() });
   return { id: ref.id, ...data };
 }
 
