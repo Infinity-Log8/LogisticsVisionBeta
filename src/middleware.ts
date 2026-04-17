@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   '/api/auth/session',
   '/api/tenant/invite',
   '/api/register',
+    '/api/stripe/webhook',
     '/privacy',
       '/terms',
   '/_next',
