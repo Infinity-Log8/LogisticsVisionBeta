@@ -28,11 +28,24 @@ function initializeFirebaseAdmin() {
       console.log("✅ Using existing Firebase Admin app.");
     } else {
       // Initialize new app
+      // Determine credential: use FIREBASE_SERVICE_ACCOUNT env var if available (for Vercel),
+      // otherwise fall back to applicationDefault() (for GCP/Firebase Studio)
+      let credential;
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        credential = cert(serviceAccount);
+        console.log("✅ Using FIREBASE_SERVICE_ACCOUNT for credentials.");
+      } else {
+        credential = applicationDefault();
+        console.log("✅ Using applicationDefault() for credentials.");
+      }
+
       adminApp = initializeApp({
-        credential: applicationDefault(), projectId: process.env.GOOGLE_CLOUD_PROJECT || "logisticsvisionbeta",
+        credential,
+        projectId: process.env.GOOGLE_CLOUD_PROJECT || "logisticsvisionbeta",
         storageBucket: process.env.STORAGE_BUCKET || undefined, // optional
       });
-      console.log("✅ Firebase Admin SDK initialized using service account.");
+      console.log("✅ Firebase Admin SDK initialized.");
     }
 
     if (adminApp) {
@@ -45,7 +58,7 @@ function initializeFirebaseAdmin() {
         storage = getStorage(adminApp).bucket(process.env.STORAGE_BUCKET);
         console.log(`✅ Storage connected: ${process.env.STORAGE_BUCKET}`);
       } else {
-        console.warn("⚠ STORAGE_BUCKET not set. Storage unavailable.");
+        console.warn("⚠️ STORAGE_BUCKET not set. Storage unavailable.");
       }
     } else {
       auth = undefined;
