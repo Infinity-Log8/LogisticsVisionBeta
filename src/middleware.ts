@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   '/api/tenant/invite',
   '/api/register',
     '/api/stripe/webhook',
+    '/monitoring',
     '/privacy',
       '/terms',
   '/_next',

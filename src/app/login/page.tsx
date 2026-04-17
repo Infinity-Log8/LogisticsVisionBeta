@@ -67,7 +67,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col lg:flex-row min-h-screen">
       {/* Left Panel */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-gradient-to-br from-orange-600 via-orange-500 to-amber-500 text-white p-12">
         <div className="flex flex-col items-center text-center">
