@@ -56,6 +56,18 @@ export const Collections = {
   trackingEvents: (tenantId: string) =>
     db.collection(`tenants/${tenantId}/trackingEvents`),
 
+  payroll: (tenantId: string) =>
+    db.collection(`tenants/${tenantId}/payroll`),
+  commissions: (tenantId: string) =>
+    db.collection(`tenants/${tenantId}/commissions`),
+  payouts: (tenantId: string) =>
+    db.collection(`tenants/${tenantId}/payouts`),
+  quotes: (tenantId: string) =>
+    db.collection(`tenants/${tenantId}/quotes`),
+  distanceRecords: (tenantId: string) =>
+    db.collection(`tenants/${tenantId}/distance_records`),
+  settings: (tenantId: string) =>
+    db.collection(`tenants/${tenantId}/settings`),
   // Global (cross-tenant) collections
   userTenants: () => db.collection('userTenants'),
   inviteTokens: () => db.collection('inviteTokens'),
@@ -173,6 +185,13 @@ export class TenantDB {
   get notes() { return Collections.notes(this.tenantId); }
   get trackingEvents() { return Collections.trackingEvents(this.tenantId); }
   get members() { return Collections.members(this.tenantId); }
+  get payroll() { return Collections.payroll(this.tenantId); }
+  get commissions() { return Collections.commissions(this.tenantId); }
+  get payouts() { return Collections.payouts(this.tenantId); }
+  get quotes() { return Collections.quotes(this.tenantId); }
+  get distanceRecords() { return Collections.distanceRecords(this.tenantId); }
+  get settings() { return Collections.settings(this.tenantId); }
+  get invites() { return Collections.invites(this.tenantId); }
 }
 
 export function getTenantDB(tenantId: string): TenantDB {

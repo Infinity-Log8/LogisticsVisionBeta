@@ -24,6 +24,9 @@ export interface OrgSettings {
   driverOTRateHigh?: number;
   fuelEfficiencyLPer100Km?: number;
   brokerCommissionRate?: number;
+  tyreCostPerKm?: number;
+  driverBasicSalary?: number;
+  monthlyKm?: number;
   // Tax rates
   taxRates?: TaxRate[];
 }

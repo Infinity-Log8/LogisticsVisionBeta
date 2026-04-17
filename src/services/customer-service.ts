@@ -11,6 +11,7 @@ export interface Customer {
   company?: string;
   notes?: string;
   status?: string;
+  contractRatePerKm?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

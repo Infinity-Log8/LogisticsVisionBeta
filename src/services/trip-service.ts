@@ -33,6 +33,8 @@ export type Trip = {
   tireCost: number;
   fuelCost: number;
   driverOTCost: number;
+  brokerCost?: number;
+  driverSalaryCost?: number;
 };
 
 export type TripFilters = {

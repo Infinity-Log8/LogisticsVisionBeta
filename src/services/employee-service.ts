@@ -23,6 +23,7 @@ export interface Employee {
   bankAccount?: string;
   taxNumber?: string;
   baseSalary?: number;
+  variablePayPerKm?: number;
 }
 
 function toPlain(val) {

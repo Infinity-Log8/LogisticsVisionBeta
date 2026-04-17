@@ -20,13 +20,10 @@ import type { Customer } from "@/services/customer-service";
 import type { Employee } from "@/services/employee-service";
 import type { Vehicle } from "@/services/vehicle-service";
 import { createTripAction } from "./actions";
+import { getSettingsAction } from "@/app/(app)/admin/settings/actions";
+import type { AppSettings } from "@/services/settings-service";
 
-const LOAD_RATE_PER_KM = 23.76;
-const MESS_RATE = 66.6 / 100;
-const TIRE_RATE = 0.30;
-const FUEL_L_PER_KM = 2.7;
-const FUEL_PRICE = 19.00;
-const OT_RATE = 0.40;
+// These defaults are overridden by organisation settings loaded at runtime
 
 const tripSchema = z.object({
   customerId: z.string().min(1, "Customer required"),
@@ -52,7 +49,8 @@ export function NewTripForm({ customers, drivers, vehicles }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [costs, setCosts] = useState({ load:0, mess:0, tire:0, fuel:0, ot:0, net:0 });
+  const [costs, setCosts] = useState({ load:0, tire:0, fuel:0, ot:0, broker:0, salary:0, net:0 });
+  const [settings, setSettings] = useState<AppSettings | null>(null);
 
   const form = useForm<TripFormValues>({
     resolver: zodResolver(tripSchema),
