@@ -1,6 +1,3 @@
-// Stripe Pricing Configuration for Logistic Visions
-// These price IDs should match your Stripe Dashboard products
-
 export type PlanTier = 'free' | 'basic' | 'premium';
 
 export interface PricingPlan {
@@ -13,42 +10,45 @@ export interface PricingPlan {
   stripePriceIdYearly: string;
   features: string[];
   limits: {
-    trucks: number;
+    trucks: number;        // -1 = unlimited
     drivers: number;
-    trips: number;       // per month
+    trips: number;         // per month
     users: number;
-    aiRequests: number;  // per month
+    aiRequests: number;    // per month
     storage: string;
   };
   popular?: boolean;
+  trialDays?: number;
 }
 
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'free',
-    name: 'Starter',
-    description: 'Perfect for small operations getting started with fleet management.',
+    name: 'Free Trial',
+    description: '14-day free trial. Full access to all Professional features – no credit card required.',
     monthlyPrice: 0,
     yearlyPrice: 0,
     stripePriceIdMonthly: '',
     stripePriceIdYearly: '',
+    trialDays: 14,
     features: [
-      'Up to 5 trucks',
-      'Up to 5 drivers',
-      '50 trips per month',
-      '2 team members',
-      'Basic dashboard & analytics',
-      'Trip tracking',
+      'Full access for 14 days',
+      'Up to 10 trucks',
+      'Up to 10 drivers',
+      '100 trips per month',
+      '5 team members',
+      'All AI features (maintenance, finance, routes)',
+      'Real-time tracking & analytics',
       'Customer management',
       'Email support',
     ],
     limits: {
-      trucks: 5,
-      drivers: 5,
-      trips: 50,
-      users: 2,
-      aiRequests: 10,
-      storage: '1 GB',
+      trucks: 10,
+      drivers: 10,
+      trips: 100,
+      users: 5,
+      aiRequests: 50,
+      storage: '5 GB',
     },
   },
   {
@@ -61,20 +61,20 @@ export const PRICING_PLANS: PricingPlan[] = [
     stripePriceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC_YEARLY || '',
     features: [
       'Up to 25 trucks',
-      'Up to 30 drivers',
-      'Unlimited trips',
+      'Up to 25 drivers',
+      '500 trips per month',
       '10 team members',
-      'Advanced analytics & reports',
-      'AI Maintenance predictions',
-      'AI Financial analyst',
-      'Document management',
-      'Brokerage module',
+      'All AI features (maintenance, finance, routes)',
+      'Advanced dashboard & analytics',
+      'Trip tracking & planning',
+      'Customer management',
+      'Invoice management',
       'Priority email support',
     ],
     limits: {
       trucks: 25,
-      drivers: 30,
-      trips: -1, // unlimited
+      drivers: 25,
+      trips: 500,
       users: 10,
       aiRequests: 200,
       storage: '10 GB',
@@ -84,7 +84,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'premium',
     name: 'Enterprise',
-    description: 'For large fleets that need unlimited access and premium support.',
+    description: 'For large fleets that need unlimited access, advanced tools, and premium support.',
     monthlyPrice: 149,
     yearlyPrice: 1430,
     stripePriceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM_MONTHLY || '',
