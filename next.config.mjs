@@ -1,4 +1,3 @@
-import { withSentryConfig } from '@sentry/nextjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -38,9 +37,4 @@ const nextConfig = {
     },
 };
 
-export default withSentryConfig(nextConfig, {
-    silent: true,
-    hideSourceMaps: true,
-    disableLogger: true,
-    tunnelRoute: "/monitoring",
-});
+export default nextConfig;
