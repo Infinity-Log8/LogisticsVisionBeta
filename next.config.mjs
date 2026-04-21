@@ -34,11 +34,7 @@ const nextConfig = {
         config.ignoreWarnings = [
             { module: /handlebars/ },
         ];
-        // Fix OpenTelemetry/Sentry semantic-conventions compatibility issue
-      if (!config.resolve) config.resolve = {};
-      if (!config.resolve.alias) config.resolve.alias = {};
-      config.resolve.alias["@opentelemetry/semantic-conventions"] = require.resolve("@opentelemetry/semantic-conventions");
-      return config;
+        return config;
     },
 };
 
