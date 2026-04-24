@@ -87,3 +87,4 @@ function ensureDbConnected(): Firestore {
 
 // Export everything
 export { db, auth, storage, initializationError, ensureDbConnected };
+export { db as adminDb };
